@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdbool.h>
 
 // randomNum(m,n); m and n are the lower and upper bounds for the random number. You can use the C library function rand(). 
 int randomNum(int min, int max) {
@@ -45,6 +46,43 @@ void display(int *table, int numberOfRows, int numberOfColumns) {
 	}
 }
 // -topRelevantDocs(*table, n) 
+void topRelevantDocs(int *table, int numberOfRows, int numberOfColumns, int word, int numberOfDocuments) {
+	// Copy table column.
+	int copy[numberOfRows];
+
+	int row;
+	for(row = 0; row < numberOfRows; row++) {
+		copy[row] = *(table + row*numberOfColumns + word);
+	}
+
+	// printf("copy:\n");
+
+	// for(row = 0; row < numberOfRows; row++) {
+	// 	printf("%d\n", copy[row]);
+	// }	
+
+	bool swapped = false;
+	int temp;
+	do {
+		swapped = false;
+
+		for(row = 0; row < numberOfRows - 1; row++) {
+			if (copy[row] < copy[row+1]) {
+				temp = copy[row];
+				copy[row] = copy[row+1];
+				copy[row + 1] = temp;
+				swapped = true;
+			}
+		}
+	} while(swapped);
+
+	printf("Top Documents with occurrences for %d:\n", word);
+
+	for(row = 0; row < numberOfDocuments; row++) {
+		printf("%d. %d\n", row + 1, copy[row]);
+	}	
+}
+
 // -logToFile()
 
 int main(int argc, char *argv[]) {
@@ -67,6 +105,14 @@ int main(int argc, char *argv[]) {
 	initialize(*occurrences, numberOfRows, numberOfColumns, inputFile);
 	fclose(inputFile);
 	display(*occurrences, numberOfRows, numberOfColumns);
+
+	int word, numTopDocs;
+	printf("Enter the index of the word you are searching for: ");
+	scanf("%d", &word);
+	printf("How many top documents you want to retrieve? ");
+	scanf("%d", &numTopDocs);
+
+	topRelevantDocs(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs);
 
     return 0;
 }
