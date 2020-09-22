@@ -22,6 +22,12 @@ void initialize(int *table, int numberOfRows, int numberOfColumns, FILE *inputFi
 		// Read file contents and save to 1D array.
 		for(cell = 0; cell < numberOfRows * numberOfColumns; cell++) {
 			fscanf(inputFile, "%d", numbers+cell);
+
+			if(*(numbers+cell) < 0 || *(numbers+cell) > 9) {
+				printf("Invalid file. It contains numbers not in the range: 0-9.");
+
+				exit(0);
+			}
 		}
 	}
 
@@ -154,13 +160,27 @@ int main(int argc, char *argv[]) {
 	numberOfRows = (int) strtol(argv[1], &argv[1], 10);
 	numberOfColumns = (int) strtol(argv[2], &argv[2], 10);
 
+	if(numberOfRows < 5 || numberOfRows > 20 || numberOfColumns < 5 || numberOfColumns > 20) {
+		printf("We're sorry but you entered invalid arguments. Number of columns and rows must be between 5-20.");
+
+		exit(0);
+	}
+
 	int occurrences[numberOfRows][numberOfColumns];
 
 	FILE *inputFile = NULL;
 
 	// Read file contents.
-	if(argc == 4) {
+	if(argc >= 4) {
 		inputFile = fopen(argv[3], "r");
+
+		if(inputFile == NULL) {
+			printf("We're sorry but the file doesn't exist or is empty.");
+
+			remove(argv[3]);
+
+			exit(0);
+		}
 	}
 
 	initialize(*occurrences, numberOfRows, numberOfColumns, inputFile);
