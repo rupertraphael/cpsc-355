@@ -45,32 +45,52 @@ void display(int *table, int numberOfRows, int numberOfColumns) {
 		printf("\n");
 	}
 }
-// -topRelevantDocs(*table, n) 
-void topRelevantDocs(int *table, int numberOfRows, int numberOfColumns, int word, int numberOfDocuments) {
-	// Copy table column.
-	int copy[numberOfRows];
 
-	int row;
-	for(row = 0; row < numberOfRows; row++) {
-		copy[row] = *(table + row*numberOfColumns + word);
+int calculateDocumentSize(int *table, int numberOfColumns, int document) {
+	int total = 0;
+
+	int column;
+	for(column = 0; column < numberOfColumns; column++) {
+		total += *(table + document*numberOfColumns + column);
 	}
 
-	// printf("copy:\n");
+	// printf("Size: %d", total);
 
-	// for(row = 0; row < numberOfRows; row++) {
-	// 	printf("%d\n", copy[row]);
-	// }	
+	return total;
+}
+
+float calculateFrequency(int *table, int numberOfColumns, int document, int word) {
+	float size = calculateDocumentSize(table, numberOfColumns, document);
+
+	if((int) size == 0) {
+		return 0;
+	}
+
+	float frequency = (*(table + document*numberOfColumns + word)) / size;
+
+	return frequency;
+}
+
+// -topRelevantDocs(*table, n) 
+void topRelevantDocs(int *table, int numberOfRows, int numberOfColumns, int word, int numberOfDocuments, int sortedRows[numberOfRows]) {
+	int row;
+	for(row = 0; row < numberOfRows; row++) {
+		sortedRows[row] = row;
+	}
 
 	bool swapped = false;
-	int temp;
+	int tempRow;
+	
 	do {
 		swapped = false;
 
 		for(row = 0; row < numberOfRows - 1; row++) {
-			if (copy[row] < copy[row+1]) {
-				temp = copy[row];
-				copy[row] = copy[row+1];
-				copy[row + 1] = temp;
+			if (calculateFrequency(table, numberOfColumns, sortedRows[row], word) < 
+				calculateFrequency(table, numberOfColumns, sortedRows[row+1], word)) {
+				tempRow = sortedRows[row];
+				sortedRows[row] = sortedRows[row+1];
+				sortedRows[row + 1] = tempRow;
+
 				swapped = true;
 			}
 		}
@@ -79,11 +99,52 @@ void topRelevantDocs(int *table, int numberOfRows, int numberOfColumns, int word
 	printf("Top Documents with occurrences for %d:\n", word);
 
 	for(row = 0; row < numberOfDocuments; row++) {
-		printf("%d. %d\n", row + 1, copy[row]);
+		printf("%d. Doc %d - %d occurences - %f frequency\n", row + 1, sortedRows[row], *(table + sortedRows[row]*numberOfColumns + word), 
+			calculateFrequency(table, numberOfColumns, sortedRows[row], word));
 	}	
 }
 
 // -logToFile()
+void logToFile(
+	int *table, 
+	int numberOfRows, 
+	int numberOfColumns, 
+	int word, 
+	int numTopDocs, 
+	int sortedRows[numberOfRows], 
+	char cont,
+	bool writeTable) {
+	FILE *logFile;
+
+	if(writeTable) {
+		logFile = fopen("assign1.log", "w");
+
+		int row, column;
+		for(row = 0; row < numberOfRows; row++) {
+			for(column = 0; column < numberOfColumns; column++) {
+				fprintf(logFile, "%-3d", *(table + row*numberOfColumns + column));
+			}
+			fprintf(logFile, "\n");
+		}
+	} else {
+		logFile = fopen("assign1.log", "a");
+	}
+
+	fprintf(logFile, "Enter the index of the word you are searching for: %d\n", word);
+	fprintf(logFile, "How many top documents you want to retrieve?  %d\n", numTopDocs);
+
+	fprintf(logFile, "Top Documents with occurrences for %d:\n", word);
+
+	int row, column;
+	for(row = 0; row < numberOfRows; row++) {
+		fprintf(logFile, "%d. Doc %d - %d occurences - %f frequency\n", row + 1, sortedRows[row], *(table + sortedRows[row]*numberOfColumns + word), 
+			calculateFrequency(table, numberOfColumns, sortedRows[row], word));
+	}	
+
+	fprintf(logFile, "Do you want to continue? Enter n for no otherwise, to continue. %c", cont);
+
+	fclose(logFile);
+}
 
 int main(int argc, char *argv[]) {
 	int numberOfRows, numberOfColumns;
@@ -106,13 +167,27 @@ int main(int argc, char *argv[]) {
 	fclose(inputFile);
 	display(*occurrences, numberOfRows, numberOfColumns);
 
-	int word, numTopDocs;
-	printf("Enter the index of the word you are searching for: ");
-	scanf("%d", &word);
-	printf("How many top documents you want to retrieve? ");
-	scanf("%d", &numTopDocs);
+	int row, column;
 
-	topRelevantDocs(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs);
+	int word, numTopDocs, i = 0;
+	char cont = 'y';
+
+	do {
+		printf("Enter the index of the word you are searching for: ");
+		scanf("%d", &word);
+		printf("How many top documents you want to retrieve? ");
+		scanf("%d", &numTopDocs);
+
+		int sortedRows[numberOfRows];
+		topRelevantDocs(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs, sortedRows);
+
+		printf("Do you want to continue? Enter n for no otherwise, to continue. ");
+		scanf(" %c", &cont);
+
+		logToFile(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs, sortedRows, cont, i == 0);
+		i++;
+
+	} while(cont != 'n');
 
     return 0;
 }
