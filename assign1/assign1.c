@@ -155,6 +155,7 @@ void logToFile(
 int main(int argc, char *argv[]) {
 	int numberOfRows, numberOfColumns;
 
+
 	srand(time(0));
 
 	numberOfRows = (int) strtol(argv[1], &argv[1], 10);
@@ -184,7 +185,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	initialize(*occurrences, numberOfRows, numberOfColumns, inputFile);
-	fclose(inputFile);
+
+	if(inputFile != NULL) {
+		fclose(inputFile);
+	}	
+
 	display(*occurrences, numberOfRows, numberOfColumns);
 
 	int row, column;
@@ -195,8 +200,24 @@ int main(int argc, char *argv[]) {
 	do {
 		printf("Enter the index of the word you are searching for: ");
 		scanf("%d", &word);
+
+		if(word >= numberOfColumns) {
+			printf("We're sorry but that word does not exist.\n");
+			printf("Please try again.\n");
+
+			continue;
+		}
+
 		printf("How many top documents you want to retrieve? ");
 		scanf("%d", &numTopDocs);
+
+
+		if(numTopDocs > numberOfRows) {
+			printf("You're retrieving more documents than there are documents.");
+			printf("\nRetrieving %d doc(s).", numberOfRows);
+
+			numTopDocs = numberOfRows;
+		}
 
 		int sortedRows[numberOfRows];
 		topRelevantDocs(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs, sortedRows);
