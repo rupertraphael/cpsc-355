@@ -219,15 +219,14 @@ int main(int argc, char *argv[]) {
 
 	// Open the file only when
 	// it is given and
-	// exit when it is empty or does not exist.
+	// exit when it is empty.
 	if(argc >= 4) {
 		inputFile = fopen(argv[3], "r");
 
 		if(inputFile == NULL) {
-			printf("We're sorry but the file doesn't exist or is empty.");
+			printf("We're sorry but the file doesn't exist.");
 			
-			fclose(argv[3]);
-			remove(argv[3]);
+			fclose(inputFile);
 
 			exit(0);
 		}
