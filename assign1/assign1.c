@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
 		scanf("%d", &word);
 
 		// Ensure word exists in the document.
-		if(word >= numberOfColumns) {
+		if(word >= numberOfColumns || word < 0) {
 			printf("We're sorry but that word does not exist.\n");
 			printf("Please try again.\n");
 
