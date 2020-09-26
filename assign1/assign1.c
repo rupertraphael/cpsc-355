@@ -3,18 +3,26 @@
 #include <time.h>
 #include <stdbool.h>
 
-// randomNum(m,n); m and n are the lower and upper bounds for the random number. You can use the C library function rand(). 
+/*
+ * randomNum
+ * returns a random number between min and max (inclusive)
+ */
 int randomNum(int min, int max) {
 	return (rand() + min) % (max + 1);
 }
-// initialize(*table) 
+/*
+ * initialize
+ * populates a 2D array table with integers given from a well formatted file
+ * inputFile or random integers (0 - 9).
+ */
 void initialize(int *table, int numberOfRows, int numberOfColumns, FILE *inputFile) {
 	int numbers[numberOfRows * numberOfColumns];
 
 	int cell;
 
+	// Check if file is empty or does not exist.
 	if(inputFile == NULL) {
-		// Generate random numbers
+		// Generate random numbers and store them in a 1D array.
 		for(cell = 0; cell < numberOfRows * numberOfColumns; cell++) {
 			*(numbers + cell) = randomNum(0, 9);
 		}
@@ -34,16 +42,23 @@ void initialize(int *table, int numberOfRows, int numberOfColumns, FILE *inputFi
 	int row, column;
 	cell = 0;
 
+	// Use the 1D array numbers and store each of the integers in it in each of table's cells.
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
 			*(table + row*numberOfColumns + column) = numbers[cell++];
 		}
 	}
 }
-// -display(*table) 
+
+/*
+ * display
+ * Displays the cells of a 2D array table in numberOfRows rows and
+ * numberOfColumns columns.
+ */
 void display(int *table, int numberOfRows, int numberOfColumns) {
 	int row, column;
 
+	// Loop through each table cell and display them with appropriate padding.
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
 			printf("%-3d", *(table + row*numberOfColumns + column));
@@ -52,19 +67,27 @@ void display(int *table, int numberOfRows, int numberOfColumns) {
 	}
 }
 
+/*
+ * calculateDocumentSize
+ * Return the document size of a given document in the table.
+ */
 int calculateDocumentSize(int *table, int numberOfColumns, int document) {
 	int total = 0;
 
+	// Add each integer in the given row (document variable) to total.
 	int column;
 	for(column = 0; column < numberOfColumns; column++) {
 		total += *(table + document*numberOfColumns + column);
 	}
 
-	// printf("Size: %d", total);
-
 	return total;
 }
 
+/*
+ * calculateFrequency
+ * Use calculateDocumentSize to get the document size and use it to divide
+ * the occurences of a given word in a document in the table.
+ */
 float calculateFrequency(int *table, int numberOfColumns, int document, int word) {
 	float size = calculateDocumentSize(table, numberOfColumns, document);
 
@@ -77,16 +100,25 @@ float calculateFrequency(int *table, int numberOfColumns, int document, int word
 	return frequency;
 }
 
-// -topRelevantDocs(*table, n) 
+/*
+ * topRelevantDocts
+ * Use bubble sort to sort documents by each of a given word's frequency in each document.
+ * Then, display the given number of top documents.
+ */
 void topRelevantDocs(int *table, int numberOfRows, int numberOfColumns, int word, int numberOfDocuments, int sortedRows[numberOfRows]) {
 	int row;
+	// Store the document numbers in an array.
 	for(row = 0; row < numberOfRows; row++) {
-		sortedRows[row] = row;
+		sortedRows[row] = row; // still unsorted.
 	}
 
 	bool swapped = false;
 	int tempRow;
 	
+	// Sort sorted rows using bubble sort by comparing the frequencies of the
+	// given word in each document.
+	// This loop ends after the iteration where it has gone through all of 
+	// the sorted rows and hasn't swapped any of them. 
 	do {
 		swapped = false;
 
@@ -104,13 +136,18 @@ void topRelevantDocs(int *table, int numberOfRows, int numberOfColumns, int word
 
 	printf("Top Documents with occurrences for %d:\n", word);
 
+	// Go through each document in the sorted array and display their document
+	// number, the given word's occurence and frequency.
 	for(row = 0; row < numberOfDocuments; row++) {
 		printf("%2d. Doc %d \t %d occurences \t %f frequency\n", row + 1, sortedRows[row], *(table + sortedRows[row]*numberOfColumns + word), 
 			calculateFrequency(table, numberOfColumns, sortedRows[row], word));
 	}	
 }
 
-// -logToFile()
+/*
+ * logToFile
+ * Print the documents-words table and other inputs by the user to assign1.log
+ */
 void logToFile(
 	int *table, 
 	int numberOfRows, 
@@ -122,6 +159,10 @@ void logToFile(
 	bool writeTable) {
 	FILE *logFile;
 
+	// Only print the table to the file if specified.
+	// Printing the table overwrites the contents of
+	// the log file.
+	// Otherwise, append all of the other inputs to the log file.
 	if(writeTable) {
 		logFile = fopen("assign1.log", "w");
 
@@ -136,6 +177,7 @@ void logToFile(
 		logFile = fopen("assign1.log", "a");
 	}
 
+	// Here, we append all of the other inputs.
 	fprintf(logFile, "Enter the index of the word you are searching for: %d\n", word);
 	fprintf(logFile, "How many top documents you want to retrieve?  %d\n", numTopDocs);
 
@@ -156,11 +198,15 @@ int main(int argc, char *argv[]) {
 	int numberOfRows, numberOfColumns;
 
 
+	// Seed the rand().
 	srand(time(0));
 
+	// Get the number of rows and columns from the 
+	// command line arguments.
 	numberOfRows = (int) strtol(argv[1], &argv[1], 10);
 	numberOfColumns = (int) strtol(argv[2], &argv[2], 10);
 
+	// Ensure that the number of rows and columns are between 5-20 inclusive.
 	if(numberOfRows < 5 || numberOfRows > 20 || numberOfColumns < 5 || numberOfColumns > 20) {
 		printf("We're sorry but you entered invalid arguments. Number of columns and rows must be between 5-20.");
 
@@ -171,13 +217,16 @@ int main(int argc, char *argv[]) {
 
 	FILE *inputFile = NULL;
 
-	// Read file contents.
+	// Open the file only when
+	// it is given and
+	// exit when it is empty or does not exist.
 	if(argc >= 4) {
 		inputFile = fopen(argv[3], "r");
 
 		if(inputFile == NULL) {
 			printf("We're sorry but the file doesn't exist or is empty.");
-
+			
+			fclose(argv[3]);
 			remove(argv[3]);
 
 			exit(0);
@@ -197,10 +246,13 @@ int main(int argc, char *argv[]) {
 	int word, numTopDocs, i = 0;
 	char cont = 'y';
 
+	// Continuously ask for a word to search for
+	// and the number of top documents to retrieve.
 	do {
 		printf("Enter the index of the word you are searching for: ");
 		scanf("%d", &word);
 
+		// Ensure word exists in the document.
 		if(word >= numberOfColumns) {
 			printf("We're sorry but that word does not exist.\n");
 			printf("Please try again.\n");
@@ -212,6 +264,8 @@ int main(int argc, char *argv[]) {
 		scanf("%d", &numTopDocs);
 
 
+		// Ensure top documents to retrieve does not exceed actual number
+		// of documents.
 		if(numTopDocs > numberOfRows) {
 			printf("You're retrieving more documents than there are documents.");
 			printf("\nRetrieving %d doc(s).", numberOfRows);
@@ -228,7 +282,7 @@ int main(int argc, char *argv[]) {
 		logToFile(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs, sortedRows, cont, i == 0);
 		i++;
 
-	} while(cont != 'n');
+	} while(cont != 'n'); // Search loop ends when user enters 'n'.
 
     return 0;
 }
