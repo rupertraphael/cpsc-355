@@ -105,7 +105,7 @@ void topRelevantDocs(int *table, int numberOfRows, int numberOfColumns, int word
 	printf("Top Documents with occurrences for %d:\n", word);
 
 	for(row = 0; row < numberOfDocuments; row++) {
-		printf("%d. Doc %d - %d occurences - %f frequency\n", row + 1, sortedRows[row], *(table + sortedRows[row]*numberOfColumns + word), 
+		printf("%2d. Doc %d \t %d occurences \t %f frequency\n", row + 1, sortedRows[row], *(table + sortedRows[row]*numberOfColumns + word), 
 			calculateFrequency(table, numberOfColumns, sortedRows[row], word));
 	}	
 }
@@ -143,11 +143,11 @@ void logToFile(
 
 	int row, column;
 	for(row = 0; row < numberOfRows; row++) {
-		fprintf(logFile, "%d. Doc %d - %d occurences - %f frequency\n", row + 1, sortedRows[row], *(table + sortedRows[row]*numberOfColumns + word), 
+		fprintf(logFile, "%2d. Doc %d \t %d occurences \t %f frequency\n", row + 1, sortedRows[row], *(table + sortedRows[row]*numberOfColumns + word), 
 			calculateFrequency(table, numberOfColumns, sortedRows[row], word));
 	}	
 
-	fprintf(logFile, "Do you want to continue? Enter n for no otherwise, to continue. %c", cont);
+	fprintf(logFile, "Do you want to continue? Enter n for no. Otherwise, enter any character to continue. %c", cont);
 
 	fclose(logFile);
 }
@@ -222,7 +222,7 @@ int main(int argc, char *argv[]) {
 		int sortedRows[numberOfRows];
 		topRelevantDocs(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs, sortedRows);
 
-		printf("Do you want to continue? Enter n for no otherwise, to continue. ");
+		printf("Do you want to continue? Enter n for no. Otherwise, enter any character to continue. ");
 		scanf(" %c", &cont);
 
 		logToFile(*occurrences, numberOfRows, numberOfColumns, word, numTopDocs, sortedRows, cont, i == 0);
