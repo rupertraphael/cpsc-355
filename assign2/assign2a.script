@@ -1,0 +1,30 @@
+Script started on 2020-10-09 23:39:08-06:00
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign2[rupertraphael.amodia@csa2 assign2]$ ./assign2a 
+Number of words must be between 5-20 (inclusive).
+How many words do you want? -1
+Number of words must be between 5-20 (inclusive).
+How many words do you want? 21
+Number of words must be between 5-20 (inclusive).
+How many words do you want? 4
+Number of words must be between 5-20 (inclusive).
+How many words do you want? 15
+Occurence for word 0: 2
+Occurence for word 1: 4
+Occurence for word 2: 0
+Occurence for word 3: 4
+Occurence for word 4: 2
+Occurence for word 5: 3
+Occurence for word 6: 9
+Occurence for word 7: 0
+Occurence for word 8: 1
+Occurence for word 9: 6
+Occurence for word 10: 3
+Occurence for word 11: 3
+Occurence for word 12: 6
+Occurence for word 13: 5
+Occurence for word 14: 2
+Highest and lowest frequencies, respectively: 18, 0
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign2[rupertraphael.amodia@csa2 assign2]$ exit
+exit
+
+Script done on 2020-10-09 23:39:43-06:00
