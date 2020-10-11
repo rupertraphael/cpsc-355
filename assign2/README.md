@@ -13,7 +13,7 @@ The sum of all the occurences.
 The percentage of the occurence of a word divided by the size.
 
 ## Files
-This project has two files: `assign2a.s`; and `assign2b.s` which came from a m4-processed version of `assign2a.s` that used macros.
+This project has two files: `assign2a.s`; and `assign2b.asm` which must be processed using m4 by running `$ m4 assign2b.asm > assign2b.s.`
 
 ## Compile
 In order to compile this program, you must have the GCC compiler installed in your environment.
