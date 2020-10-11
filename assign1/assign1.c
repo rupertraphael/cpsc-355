@@ -4,6 +4,12 @@
 #include <stdbool.h>
 
 /*
+ * Assignment 1 (CPSC 355)
+ * Author: Rupert Raphael Amodia
+ * TA: Abdelghani Guerbas
+ */
+
+/*
  * randomNum
  * returns a random number between min and max (inclusive)
  */
