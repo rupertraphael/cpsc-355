@@ -1,0 +1,17 @@
+Script started on 2020-10-09 23:40:26-06:00
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign2[rupertraphael.amodia@csa2 assign2]$ ./assign2b
+Number of words must be between 5-20 (inclusive).
+How many words do you want? 7
+Occurence for word 0: 0
+Occurence for word 1: 9
+Occurence for word 2: 0
+Occurence for word 3: 9
+Occurence for word 4: 1
+Occurence for word 5: 9
+Occurence for word 6: 7
+Occurence for word 7: 1
+Highest and lowest frequencies, respectively: 25, 0
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign2[rupertraphael.amodia@csa2 assign2]$ eit[K[Kxit
+exit
+
+Script done on 2020-10-09 23:40:37-06:00

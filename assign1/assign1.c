@@ -203,6 +203,10 @@ void logToFile(
 int main(int argc, char *argv[]) {
 	int numberOfRows, numberOfColumns;
 
+	if(argc < 3) {
+		printf("Invalid number of arguments.");
+		exit(0);
+	}
 
 	// Seed the rand().
 	srand(time(0));
