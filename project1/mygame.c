@@ -6,6 +6,7 @@
 /*
  * randomNum
  * returns a random number between min and max (inclusive)
+ * only correct if max = 2^n - 1 where n is an integer.
  * multiplies the random number by -1 if negative is true.
  */
 float randomNum(int min, int max, bool negative) {
@@ -22,7 +23,7 @@ float randomNum(int min, int max, bool negative) {
 	return num;
 }
 
-void initializeGame(float *board, int numberOfRows, int numberOfColumns) {
+void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
 	int row, column;
 
 	int min = 1,max = 15;
@@ -52,14 +53,26 @@ void initializeGame(float *board, int numberOfRows, int numberOfColumns) {
 			}
 
 			*(board + row * numberOfColumns + column) = number;
+			*(covered + row * numberOfColumns + column) = true;
 		}
 	}	
+
+	// Generate random position for exit tile.
+	int powerOf2 = 1;
+	while(powerOf2 < numberOfRows * numberOfColumns) {
+		powerOf2 <<= 1;
+	}
+
+	if(powerOf2 > numberOfRows * numberOfColumns) {
+		powerOf2 >>= 1;
+	}
+
+	int exitPosition = randomNum(1, powerOf2 - 1, false); 
+
+	*(board + exitPosition) = 0;	
+
 	printf("Number of powerups: %d\n", numberOfPowerups);
 	printf("Number of negatives: %d\n", numberOfNegatives);
-}
-
-void displayGame(float *board, int numberOfRows, int numberOfColumns) {
-	int row, column;
 
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
@@ -67,6 +80,10 @@ void displayGame(float *board, int numberOfRows, int numberOfColumns) {
 		}
 		printf("\n");
 	}	
+}
+
+void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
+	int row, column;
 
 	printf("\n");
 
@@ -78,11 +95,13 @@ void displayGame(float *board, int numberOfRows, int numberOfColumns) {
 		for(column = 0; column < numberOfColumns; column++) {
 			number = *(board + row * numberOfColumns + column);
 
-			// if(!uncovered) {
-			// 	printf("%-2s", "X");
+			uncovered = !*(covered + row * numberOfColumns + column);
 
-			// 	continue;
-			// }
+			if(!uncovered) {
+				printf("%-3s", "X");
+
+				continue;
+			}
 
 			if(number > 0 && number <= 15) {
 				// printf("%-2s", "\u2795");
@@ -90,6 +109,9 @@ void displayGame(float *board, int numberOfRows, int numberOfColumns) {
 			} else if (number < 0 && number >= -15) {
 				// printf("%-2s", "\u274C");
 				printf("%-3s", "-");
+			} else if (number == 0) {
+				// printf("%-2s", "\u274C");
+				printf("%-3s", "*");
 			} else {
 				// printf("%-2s", "\U0001F4B0");
 				printf("%-3s", "$");
@@ -114,8 +136,24 @@ int main(int argc, char *argv[]) {
 	// command line arguments.
 	numberOfRows = (int) strtol(argv[1], &argv[1], 10);
 	numberOfColumns = (int) strtol(argv[2], &argv[2], 10);
-	
+
 	float board[numberOfRows][numberOfColumns];
-	initializeGame(*board, numberOfRows, numberOfColumns);
-	displayGame(*board, numberOfRows, numberOfColumns);
+	bool covered[numberOfRows * numberOfColumns];
+	initializeGame(*board, covered, numberOfRows, numberOfColumns);
+	
+	displayGame(*board, covered, numberOfRows, numberOfColumns);
+
+	int bombs = 3;
+	int x, y;
+
+	while(bombs > 0) {
+		printf("Enter bomb position (x y): ");
+		scanf("%d %d", &x, &y);
+		printf("position: %d, %d", x, y);
+
+		*(covered + x * numberOfRows + y) = false;
+
+		displayGame(*board, covered, numberOfRows, numberOfColumns);
+		bombs--;
+	}
 }
