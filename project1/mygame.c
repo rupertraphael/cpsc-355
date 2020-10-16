@@ -144,9 +144,9 @@ float calculateScore(float *board, bool *covered, int numberOfRows, int numberOf
 
 	for(int row = 0; row <= numberOfRows; row++) {
 		for(int column = 0; column <= numberOfColumns; column++) {
-			score = *(board + row * numberOfRows + column);
+			score = *(board + row * numberOfColumns + column);
 
-			if(!*(covered + row * numberOfRows + column) && score > -15 && score < 15) {
+			if(!*(covered + row * numberOfColumns + column) && score > -15 && score < 15) {
 				totalScore += score;
 			}
 		}
@@ -169,7 +169,7 @@ void logScore(char *name, float score, double time, int numberOfRows, int number
 		fprintf(logFile, "%-15s\t%10s\t%15s\t%30s\n", "name", "score", "time(seconds)", "board size (rows x columns)");
 	}
 
-	fprintf(logFile, "%-15s\t%10.2f\t%15.3f\t%25d x %d\n", name, score, time, numberOfRows, numberOfColumns);
+	fprintf(logFile, "%-15s\t%10.2f\t%15.2f\t%25d x %d\n", name, score, time, numberOfRows, numberOfColumns);
 
 	fclose(logFile);
 }
@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
 	bool exitFound = false;
 	float totalScore = 0, roundScore = 0;
 
-	clock_t begin = clock();
+	time_t begin = time(NULL);
 
 	while(bombs > 0 && !exitFound && lives > 0) {
 		printf("%sYou have %d bombs left\n", KNRM, bombs);
@@ -245,14 +245,13 @@ int main(int argc, char *argv[]) {
 
 		bombPowerupsCount = 0;
 
-		// loop through the square/radius
 		for(int row = start[0]; row <= end[0]; row++) {
 			for(int column = start[1]; column <= end[1]; column++) {
-				if(!*(covered + row * numberOfRows + column)) {
+				if(!*(covered + row * numberOfColumns + column)) {
 					continue;
 				}
 
-				*(covered + row * numberOfRows + column) = false;
+				*(covered + row * numberOfColumns + column) = false;
 
 				float score = board[row][column];
 
@@ -305,12 +304,12 @@ int main(int argc, char *argv[]) {
 		bombs--;
 	}
 
-	clock_t end = clock();
-	double time_spent = (double)(end - begin) / CLOCKS_PER_SEC * 10000;
+	time_t end = time(NULL);
+	double time_spent = (double)(end - begin);
 
 	printf("\n%sGame Over!", KRED);
 
-	printf("\n%s%s\t%.2f\t%f", KNRM, name, totalScore, time_spent);
+	printf("\n%s%s\t%.2f\t%.2f", KNRM, name, totalScore, time_spent);
 
 	logScore(name, totalScore, time_spent, numberOfRows, numberOfColumns);
 }
