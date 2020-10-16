@@ -211,13 +211,16 @@ int main(int argc, char *argv[]) {
 		printf("%sYou have %d bombs left\n", KNRM, bombs);
 		printf("%sDrop the bomb at (x y): ", KNRM);
 		scanf("%d %d", &x, &y);
+
+		// Check if bombing inside area.
+		if(!(x >= 0 && x < numberOfRows && y >= 0 && y < numberOfColumns)) {
+			printf("You're bombing outside the bombable range! Try again!");
+			continue;
+		}
+
 		printf("Bombing position: %d, %d...", x, y);
 
 		roundScore = 0;
-
-		// TODO: checks
-		// inside area
-		// bombed already
 
 		// TODO: determine affected positions - depends on radius.
 		// calculate start position (top left)
