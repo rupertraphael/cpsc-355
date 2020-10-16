@@ -182,14 +182,20 @@ int main(int argc, char *argv[]) {
 		exit(0);
 	}
 
-	// Seed the rand().
-	srand(time(0));
-
 	// Get the number of rows and columns from the 
 	// command line arguments.
 	numberOfRows = (int) strtol(argv[2], &argv[2], 10);
 	numberOfColumns = (int) strtol(argv[3], &argv[3], 10);
+
+	if(numberOfRows < 10 || numberOfColumns < 10) {
+		printf("%sSorry but boards smaller than 10 x 10 rows and columns are for weaklings!", KRED);
+		exit(0);
+	}
+
 	char* name = argv[1];
+
+	// Seed the rand().
+	srand(time(0));
 
 	float board[numberOfRows][numberOfColumns];
 	bool covered[numberOfRows * numberOfColumns];
