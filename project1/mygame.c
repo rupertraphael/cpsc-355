@@ -26,7 +26,7 @@ float randomNum(int min, int max, bool negative) {
 	do {
 		num = ((rand() + min) & (max)) 
 			+ ((float)rand() / (float)(RAND_MAX)); // Add fraction to whole number.
-	} while(num < min || num > max);
+	} while(num <= min || num > max);
 
 	if(negative) {
 		num *= -1;
@@ -38,7 +38,7 @@ float randomNum(int min, int max, bool negative) {
 void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
 	int row, column;
 
-	int min = 1,max = 15;
+	int min = 0,max = 15;
 
 	int percentageOfPowerups = 20, percentageOfNegatives = 35;
 	int maxNumberOfPowerups, maxNumberOfNegatives;
@@ -139,10 +139,26 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
 	}	
 } 
 
+float calculateScore(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
+	float totalScore = 0, score;
+
+	for(int row = 0; row <= numberOfRows; row++) {
+		for(int column = 0; column <= numberOfColumns; column++) {
+			score = *(board + row * numberOfRows + column);
+
+			if(!*(covered + row * numberOfRows + column) && score > -15 && score < 15) {
+				totalScore += score;
+			}
+		}
+	}
+
+	return totalScore;
+}
+
 int main(int argc, char *argv[]) {
 	int numberOfRows, numberOfColumns;
 
-	if(argc != 3) {
+	if(argc != 4) {
 		printf("Invalid number of arguments.");
 		exit(0);
 	}
@@ -152,8 +168,9 @@ int main(int argc, char *argv[]) {
 
 	// Get the number of rows and columns from the 
 	// command line arguments.
-	numberOfRows = (int) strtol(argv[1], &argv[1], 10);
-	numberOfColumns = (int) strtol(argv[2], &argv[2], 10);
+	numberOfRows = (int) strtol(argv[2], &argv[2], 10);
+	numberOfColumns = (int) strtol(argv[3], &argv[3], 10);
+	char* name = argv[1];
 
 	float board[numberOfRows][numberOfColumns];
 	bool covered[numberOfRows * numberOfColumns];
@@ -161,14 +178,18 @@ int main(int argc, char *argv[]) {
 	
 	displayGame(*board, covered, numberOfRows, numberOfColumns);
 
-	int bombs = 3;
+	int bombs = 1;
+	bombs += (int)(numberOfRows * numberOfColumns * 0.01);
 	int x, y;
 	int bombRadius = 1, bombPowerupsCount = 0;
 	int lives = 3;
 	bool exitFound = false;
 	float totalScore = 0, roundScore = 0;
 
+	clock_t begin = clock();
+
 	while(bombs > 0 && !exitFound && lives > 0) {
+		printf("%sYou have %d bombs left\n", KNRM, bombs);
 		printf("%sDrop the bomb at (x y): ", KNRM);
 		scanf("%d %d", &x, &y);
 		printf("Bombing position: %d, %d...", x, y);
@@ -216,7 +237,7 @@ int main(int argc, char *argv[]) {
 
 				float score = board[row][column];
 
-				if((score >= 1 && score <= 15) || (score <= -1 && score >= -15)) {
+				if((score > 0 && score <= 15) || (score < 0 && score >= -15)) {
 					roundScore += score;
 				} else if (score == 69) {
 					// count bomb powerups
@@ -227,9 +248,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
+		totalScore = calculateScore(*board, covered, numberOfRows, numberOfColumns);
+
 		bombRadius = 1;
 
-		if(bombPowerupsCount > 0) {
+		if(bombPowerupsCount > 0 && bombs > 1) {
 			bombRadius = bombRadius << bombPowerupsCount ;
 			printf("%sBang to the power of %d! Your next bomb's radius is now %d\n", KYEL, bombPowerupsCount, bombRadius);
 		}
@@ -244,7 +267,6 @@ int main(int argc, char *argv[]) {
 		}
 		printf("Score for this round: %.2f%s\n", roundScore, KNRM);
 
-		totalScore += roundScore;
 		if(totalScore > 0) {
 			printf("%s", KGRN);
 		} else if(totalScore < 0) {
@@ -264,5 +286,10 @@ int main(int argc, char *argv[]) {
 		bombs--;
 	}
 
+	clock_t end = clock();
+	double time_spent = (double)(end - begin) / CLOCKS_PER_SEC * 10000;
+
 	printf("\n%sGame Over!", KRED);
+
+	printf("\n%s%s\t%.2f\t%f", KNRM, name, totalScore, time_spent);
 }
