@@ -3,6 +3,16 @@
 #include <stdlib.h>
 #include <time.h>
 
+// Source: https://stackoverflow.com/questions/3585846/color-text-in-terminal-applications-in-unix
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+
 /*
  * randomNum
  * returns a random number between min and max (inclusive)
@@ -12,8 +22,10 @@
 float randomNum(int min, int max, bool negative) {
 	float num; 
 
+	// Generate random number until it is in bounds.
 	do {
-		num = ((rand() + min) & (max)) + ((float)rand() / (float)(RAND_MAX));	
+		num = ((rand() + min) & (max)) 
+			+ ((float)rand() / (float)(RAND_MAX)); // Add fraction to whole number.
 	} while(num < min || num > max);
 
 	if(negative) {
@@ -35,12 +47,15 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 	maxNumberOfPowerups = (int)(numberOfRows * numberOfColumns * percentageOfPowerups / 100);
 	maxNumberOfNegatives = (int)(numberOfRows * numberOfColumns * percentageOfNegatives / 100);
 
-	int dice, diceMax = 16; // Determines whether to generate a positive number, negative number or powerup.
+	int dice, diceMax = 16; // Helps determine whether to generate a positive number, negative number or powerup.
 	float number; // The number to put in the board.
 
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
-			dice = randomNum(1, diceMax - 1, false);
+			// roll dice; generate number to determine whether
+			// a positive number, negative number, or powerup
+			// should be placed on the board
+			dice = randomNum(1, diceMax - 1, false); 
 
 			if(dice <= diceMax * percentageOfNegatives / 100 && numberOfNegatives <= maxNumberOfNegatives) {
 				number = randomNum(min, max, true);
@@ -63,6 +78,9 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 		powerOf2 <<= 1;
 	}
 
+	// Make sure position is inside board.
+	// Limitation: might not reach other board positions
+	// when number of board cells isn't a power of 2.
 	if(powerOf2 > numberOfRows * numberOfColumns) {
 		powerOf2 >>= 1;
 	}
@@ -98,23 +116,23 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
 			uncovered = !*(covered + row * numberOfColumns + column);
 
 			if(!uncovered) {
-				printf("%-3s", "X");
+				printf("%s%-3s", KCYN, "X");
 
 				continue;
 			}
 
 			if(number > 0 && number <= 15) {
 				// printf("%-2s", "\u2795");
-				printf("%-3s", "+");
+				printf("%s%-3s", KGRN, "+");
 			} else if (number < 0 && number >= -15) {
 				// printf("%-2s", "\u274C");
-				printf("%-3s", "-");
+				printf("%s%-3s", KRED, "-");
 			} else if (number == 0) {
 				// printf("%-2s", "\u274C");
-				printf("%-3s", "*");
+				printf("%s%-3s", KWHT, "*");
 			} else {
 				// printf("%-2s", "\U0001F4B0");
-				printf("%-3s", "$");
+				printf("%s%-3s", KYEL, "$");
 			}
 		}
 		printf("\n");
@@ -145,15 +163,106 @@ int main(int argc, char *argv[]) {
 
 	int bombs = 3;
 	int x, y;
+	int bombRadius = 1, bombPowerupsCount = 0;
+	int lives = 3;
+	bool exitFound = false;
+	float totalScore = 0, roundScore = 0;
 
-	while(bombs > 0) {
-		printf("Enter bomb position (x y): ");
+	while(bombs > 0 && !exitFound && lives > 0) {
+		printf("%sDrop the bomb at (x y): ", KNRM);
 		scanf("%d %d", &x, &y);
-		printf("position: %d, %d", x, y);
+		printf("Bombing position: %d, %d...", x, y);
 
-		*(covered + x * numberOfRows + y) = false;
+		roundScore = 0;
+
+		// TODO: checks
+		// inside area
+		// bombed already
+
+		// TODO: determine affected positions - depends on radius.
+		// calculate start position (top left)
+		int start[] = {(x - bombRadius), (y - bombRadius)};
+		// calculate end position (bottom right)
+		int end[] = {(x + bombRadius), (y + bombRadius)};
+		if(start[0] < 0) {
+			start[0] = 0;
+		}
+
+		if(start[1] < 0) {
+			start[1] = 0;
+		}
+
+		if(end[0] > numberOfRows - 1) {
+			end[0] = numberOfRows - 1;
+		}
+
+		if(end[1] > numberOfColumns - 1) {
+			end[1] = numberOfColumns - 1;
+		}
+
+		printf("\nstart: %d,%d\n", start[0], start[1]);
+		printf("end: %d,%d\n", end[0], end[1]);
+
+		bombPowerupsCount = 0;
+
+		// loop through the square/radius
+		for(int row = start[0]; row <= end[0]; row++) {
+			for(int column = start[1]; column <= end[1]; column++) {
+				if(!*(covered + row * numberOfRows + column)) {
+					continue;
+				}
+
+				*(covered + row * numberOfRows + column) = false;
+
+				float score = board[row][column];
+
+				if((score >= 1 && score <= 15) || (score <= -1 && score >= -15)) {
+					roundScore += score;
+				} else if (score == 69) {
+					// count bomb powerups
+					bombPowerupsCount++;
+				} else if (score == 0) {
+					exitFound = true;
+				}
+			}
+		}
+
+		bombRadius = 1;
+
+		if(bombPowerupsCount > 0) {
+			bombRadius = bombRadius << bombPowerupsCount ;
+			printf("%sBang to the power of %d! Your next bomb's radius is now %d\n", KYEL, bombPowerupsCount, bombRadius);
+		}
+		
+
+		if(roundScore > 0) {
+			printf("%s", KGRN);
+		} else if(roundScore < 0) {
+			printf("%s", KRED);
+		} else {
+			printf("%s", KNRM);
+		}
+		printf("Score for this round: %.2f%s\n", roundScore, KNRM);
+
+		totalScore += roundScore;
+		if(totalScore > 0) {
+			printf("%s", KGRN);
+		} else if(totalScore < 0) {
+			printf("%s", KRED);
+			// life is lost
+			lives--;
+			printf("\nYou lost a life!\n");
+		} else {
+			printf("%s", KNRM);
+		}
+
+		printf("Total Score: %.2f", totalScore);
+
+		printf("\nLives Left: %d", lives);
 
 		displayGame(*board, covered, numberOfRows, numberOfColumns);
 		bombs--;
 	}
+
+	printf("\n%sGame Over!", KRED);
 }
