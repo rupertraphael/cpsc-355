@@ -155,7 +155,7 @@ float calculateScore(float *board, bool *covered, int numberOfRows, int numberOf
 	return totalScore;
 }
 
-void logScore(char *name, float score, double time) {
+void logScore(char *name, float score, double time, int numberOfRows, int numberOfColumns) {
 	FILE *logFile = fopen("scores.log", "r");
 	bool writeHeader = false;
 	if(logFile == NULL) {
@@ -166,10 +166,10 @@ void logScore(char *name, float score, double time) {
 	logFile = fopen("scores.log", "ab+");
 
 	if(writeHeader) {
-		fprintf(logFile, "%-15s\t%10s\t%15s\n", "name", "score", "time(seconds)");
+		fprintf(logFile, "%-15s\t%10s\t%15s\t%30s\n", "name", "score", "time(seconds)", "board size (rows x columns)");
 	}
 
-	fprintf(logFile, "%-15s\t%10.2f\t%15.3f\n", name, score, time);
+	fprintf(logFile, "%-15s\t%10.2f\t%15.3f\t%25d x %d\n", name, score, time, numberOfRows, numberOfColumns);
 
 	fclose(logFile);
 }
@@ -312,5 +312,5 @@ int main(int argc, char *argv[]) {
 
 	printf("\n%s%s\t%.2f\t%f", KNRM, name, totalScore, time_spent);
 
-	logScore(name, totalScore, time_spent);
+	logScore(name, totalScore, time_spent, numberOfRows, numberOfColumns);
 }
