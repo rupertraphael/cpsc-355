@@ -40,7 +40,7 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 
 	int min = 0,max = 15;
 
-	int percentageOfPowerups = 20, percentageOfNegatives = 35;
+	int percentageOfPowerups = 20, percentageOfNegatives = 40;
 	int maxNumberOfPowerups, maxNumberOfNegatives;
 	int numberOfPowerups = 0, numberOfNegatives = 0;
 
@@ -89,8 +89,14 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 
 	*(board + exitPosition) = 0;	
 
-	printf("Number of powerups: %d\n", numberOfPowerups);
-	printf("Number of negatives: %d\n", numberOfNegatives);
+	printf("\nNumber of powerups: %d/%d (%.2f)\n", 
+		numberOfPowerups, 
+		numberOfColumns * numberOfRows, 
+		(float)((float) 100 * numberOfPowerups / (numberOfColumns * numberOfRows)));
+	printf("Number of negatives: %d/%d (%.2f)\n\n", 
+		numberOfNegatives, 
+		numberOfColumns * numberOfRows, 
+		(float)((float) 100 *numberOfNegatives / (numberOfColumns * numberOfRows)));
 
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
@@ -174,8 +180,13 @@ void logScore(char *name, float score, double time, int numberOfRows, int number
 	fclose(logFile);
 }
 
-void exitGame() {
-	printf("\n%sYou left too early!\n", KRED);
+void exitGame(char *message) {
+	if(*(message) == '\0') {
+		message = "You left too early!";
+	}
+
+	printf("%s%s", KRED, message);
+
 	exit(0);
 }
 
@@ -192,20 +203,29 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 
 	while(bombs > 0 && !exitFound && lives > 0) {
 		printf("%sYou have %d bombs left\n", KNRM, bombs);
+		printf("If you want to stop playing input \"-1 -1\".\n");
 		printf("%sDrop the bomb at (x y): ", KNRM);
-		scanf("%d %d", &x, &y);
+		
+		// scanned is the number of succesfully scanned inputs.
+		int scanned = scanf("%d %d", &x, &y);
+		
+		if(scanned != 2) {
+			exitGame("Sorry, invalid input! You were exited from the game.");
+		}
 
 		if(x == -1 || y == -1) {
-			exitGame();
+			break;
 		}
 
 		// Check if bombing inside area.
 		if(!(x >= 0 && x < numberOfRows && y >= 0 && y < numberOfColumns)) {
 			printf("You're bombing outside the bombable range! Try again!");
+			x = 0;
+			y = 0;
 			continue;
 		}
 
-		printf("Bombing position: %d, %d...", x, y);
+		printf("Bombing position: %d, %d...\n", x, y);
 
 		roundScore = 0;
 
@@ -228,9 +248,6 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 		if(end[1] > numberOfColumns - 1) {
 			end[1] = numberOfColumns - 1;
 		}
-
-		printf("\nstart: %d,%d\n", start[0], start[1]);
-		printf("end: %d,%d\n", end[0], end[1]);
 
 		bombPowerupsCount = 0;
 
@@ -260,7 +277,12 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 		bombRadius = 1;
 
 		if(bombPowerupsCount > 0 && bombs > 1) {
-			bombRadius = bombRadius << bombPowerupsCount ;
+			bombRadius = bombRadius << bombPowerupsCount;
+
+			if(bombPowerupsCount > 30) {
+				bombRadius = 2147483647;
+			}
+
 			printf("%sBang to the power of %d! Your next bomb's radius is now %d\n", KYEL, bombPowerupsCount, bombRadius);
 		}
 		
@@ -371,8 +393,14 @@ void displayTopScores(int n) {
 		}
 	} while(swapped);
 
-	for(row = 0; row < count; row++) {
-		printf("\n%s\t%.2f\t%.2f", names[sortedRows[row]], *(scores + sortedRows[row]), *(times + sortedRows[row]));
+	if(n > count) {
+		n = count;
+	}
+
+	printf("%sTop %d Scores:%s\n", KYEL, n, KNRM);
+
+	for(row = 0; row < n; row++) {
+		printf("%d. %s\t%.2f\t%.2f\n", row + 1, names[sortedRows[row]], *(scores + sortedRows[row]), *(times + sortedRows[row]));
 	}
 
 	fclose(logFile);
@@ -393,7 +421,7 @@ int main(int argc, char *argv[]) {
 	numberOfColumns = (int) strtol(argv[3], &argv[3], 10);
 
 	if(numberOfRows < 10 || numberOfColumns < 10) {
-		printf("%sSorry but boards smaller than 10 x 10 rows and columns are for weaklings!", KRED);
+		printf("%sSorry, invalid board size. A board must be at least 10 x 10 in size.", KRED);
 		exit(0);
 	}
 
@@ -404,11 +432,32 @@ int main(int argc, char *argv[]) {
 
 	float board[numberOfRows][numberOfColumns];
 	bool covered[numberOfRows * numberOfColumns];
+
+	int numOfTopScores = 0;
+
+	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0. ");
+	int scanned = scanf("%d", &numOfTopScores);
+
+	if(scanned == 1) {
+		displayTopScores(numOfTopScores);
+	} else {
+		exitGame("Invalid input.");
+	}
+
 	initializeGame(*board, covered, numberOfRows, numberOfColumns);
 	
 	displayGame(*board, covered, numberOfRows, numberOfColumns);
 
 	playGame(*board, covered, name, numberOfRows, numberOfColumns);
 
-	displayTopScores(5);
+	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0. ");
+	scanned = scanf("%d", &numOfTopScores);
+
+	if(scanned == 1) {
+		displayTopScores(numOfTopScores);
+	} else {
+		exitGame("Invalid input.");
+	}
+
+	printf("%sThank you for playing bomberman!", KGRN);
 }
