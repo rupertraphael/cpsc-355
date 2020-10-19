@@ -174,35 +174,12 @@ void logScore(char *name, float score, double time, int numberOfRows, int number
 	fclose(logFile);
 }
 
-int main(int argc, char *argv[]) {
-	int numberOfRows, numberOfColumns;
+void exitGame() {
+	printf("\n%sYou left too early!\n", KRED);
+	exit(0);
+}
 
-	if(argc != 4) {
-		printf("Invalid number of arguments.");
-		exit(0);
-	}
-
-	// Get the number of rows and columns from the 
-	// command line arguments.
-	numberOfRows = (int) strtol(argv[2], &argv[2], 10);
-	numberOfColumns = (int) strtol(argv[3], &argv[3], 10);
-
-	if(numberOfRows < 10 || numberOfColumns < 10) {
-		printf("%sSorry but boards smaller than 10 x 10 rows and columns are for weaklings!", KRED);
-		exit(0);
-	}
-
-	char* name = argv[1];
-
-	// Seed the rand().
-	srand(time(0));
-
-	float board[numberOfRows][numberOfColumns];
-	bool covered[numberOfRows * numberOfColumns];
-	initializeGame(*board, covered, numberOfRows, numberOfColumns);
-	
-	displayGame(*board, covered, numberOfRows, numberOfColumns);
-
+void playGame(float *board, bool *covered, char *name, int numberOfRows, int numberOfColumns) {
 	int bombs = 1;
 	bombs += (int)(numberOfRows * numberOfColumns * 0.01);
 	int x, y;
@@ -218,6 +195,10 @@ int main(int argc, char *argv[]) {
 		printf("%sDrop the bomb at (x y): ", KNRM);
 		scanf("%d %d", &x, &y);
 
+		if(x == -1 || y == -1) {
+			exitGame();
+		}
+
 		// Check if bombing inside area.
 		if(!(x >= 0 && x < numberOfRows && y >= 0 && y < numberOfColumns)) {
 			printf("You're bombing outside the bombable range! Try again!");
@@ -228,7 +209,6 @@ int main(int argc, char *argv[]) {
 
 		roundScore = 0;
 
-		// TODO: determine affected positions - depends on radius.
 		// calculate start position (top left)
 		int start[] = {(x - bombRadius), (y - bombRadius)};
 		// calculate end position (bottom right)
@@ -262,7 +242,7 @@ int main(int argc, char *argv[]) {
 
 				*(covered + row * numberOfColumns + column) = false;
 
-				float score = board[row][column];
+				float score = *(board + row * numberOfColumns + column);
 
 				if((score > 0 && score <= 15) || (score < 0 && score >= -15)) {
 					roundScore += score;
@@ -275,7 +255,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		totalScore = calculateScore(*board, covered, numberOfRows, numberOfColumns);
+		totalScore = calculateScore(board, covered, numberOfRows, numberOfColumns);
 
 		bombRadius = 1;
 
@@ -309,7 +289,7 @@ int main(int argc, char *argv[]) {
 
 		printf("\nLives Left: %d", lives);
 
-		displayGame(*board, covered, numberOfRows, numberOfColumns);
+		displayGame(board, covered, numberOfRows, numberOfColumns);
 		bombs--;
 	}
 
@@ -318,7 +298,117 @@ int main(int argc, char *argv[]) {
 
 	printf("\n%sGame Over!", KRED);
 
-	printf("\n%s%s\t%.2f\t%.2f", KNRM, name, totalScore, time_spent);
+	printf("\n%s%s\t%.2f\t%.2f\n", KNRM, name, totalScore, time_spent);
 
 	logScore(name, totalScore, time_spent, numberOfRows, numberOfColumns);
+}
+
+void displayTopScores(int n) {
+	FILE *logFile = fopen("scores.log", "r");
+
+	char string[100];
+
+	// Skips first line which is the log file column names
+	fgets(string, sizeof(string), logFile);
+
+	char name[50], boardSize[50];
+	float score, time;
+
+	int count = 0;
+
+	float *scores = malloc(sizeof(float));
+	float *times = malloc(sizeof(float));
+	char (*names)[sizeof(name)] = malloc(sizeof(char[1][50]));
+
+	char startOfName;
+
+	while((startOfName = fgetc(logFile)) != EOF) {
+		fscanf(logFile, "%s", name);
+		fscanf(logFile, "%f", &score);
+		fscanf(logFile, "%f", &time);
+		// skip to end of line
+		fgets(string, sizeof(string), logFile);
+		count++;
+		names = realloc(names, count * sizeof(char[count][50]));
+		int index = 1;
+		names[count - 1][0] = startOfName;
+		while(index < 49) {
+			names[count - 1][index] = name[index - 1];
+			index++;
+		}
+
+		scores = (float *) realloc(scores, count * sizeof(float));
+		times = (float *) realloc(times, count * sizeof(float));
+		scores[count - 1] = score;
+		times[count - 1] = time;
+	}
+
+	int row;
+	int sortedRows[count];
+	// Store the document numbers in an array.
+	for(row = 0; row < count; row++) {
+		sortedRows[row] = row; // still unsorted.
+	}
+
+	bool swapped = false;
+	int tempRow;
+	
+	// Sort sorted rows using bubble sort by comparing the frequencies of the
+	// given word in each document.
+	// This loop ends after the iteration where it has gone through all of 
+	// the sorted rows and hasn't swapped any of them. 
+	do {
+		swapped = false;
+
+		for(row = 0; row < count - 1; row++) {
+			if (*(scores + sortedRows[row]) < *(scores + sortedRows[row + 1])) {
+				tempRow = sortedRows[row];
+				sortedRows[row] = sortedRows[row+1];
+				sortedRows[row + 1] = tempRow;
+
+				swapped = true;
+			}
+		}
+	} while(swapped);
+
+	for(row = 0; row < count; row++) {
+		printf("\n%s\t%.2f\t%.2f", names[sortedRows[row]], *(scores + sortedRows[row]), *(times + sortedRows[row]));
+	}
+
+	fclose(logFile);
+}
+
+
+int main(int argc, char *argv[]) {
+	int numberOfRows, numberOfColumns;
+
+	if(argc != 4) {
+		printf("Invalid number of arguments.");
+		exit(0);
+	}
+
+	// Get the number of rows and columns from the 
+	// command line arguments.
+	numberOfRows = (int) strtol(argv[2], &argv[2], 10);
+	numberOfColumns = (int) strtol(argv[3], &argv[3], 10);
+
+	if(numberOfRows < 10 || numberOfColumns < 10) {
+		printf("%sSorry but boards smaller than 10 x 10 rows and columns are for weaklings!", KRED);
+		exit(0);
+	}
+
+	char* name = argv[1];
+
+	// Seed the rand().
+	srand(time(0));
+
+	float board[numberOfRows][numberOfColumns];
+	bool covered[numberOfRows * numberOfColumns];
+	initializeGame(*board, covered, numberOfRows, numberOfColumns);
+	
+	displayGame(*board, covered, numberOfRows, numberOfColumns);
+
+	playGame(*board, covered, name, numberOfRows, numberOfColumns);
+
+	displayTopScores(5);
 }
