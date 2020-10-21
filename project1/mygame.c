@@ -13,11 +13,15 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
-/*
- * randomNum
- * returns a random number between min and max (inclusive)
- * only correct if max = 2^n - 1 where n is an integer.
- * multiplies the random number by -1 if negative is true.
+/**
+ * Generates a random float number between min and 
+ * max inclusive. 
+ * This implementation works unexpectedly if min is negative or
+ * max != (2^n) - 1.
+ * @param  min      min value expected to be generated
+ * @param  max      max value expected to be generated
+ * @param  negative specifies if generated number is negative
+ * @return          |float| between |min| and |max|
  */
 float randomNum(int min, int max, bool negative) {
 	float num; 
@@ -28,6 +32,7 @@ float randomNum(int min, int max, bool negative) {
 			+ ((float)rand() / (float)(RAND_MAX)); // Add fraction to whole number.
 	} while(num <= min || num > max);
 
+	// Make the number negative if negative param is true.
 	if(negative) {
 		num *= -1;
 	}
@@ -35,6 +40,14 @@ float randomNum(int min, int max, bool negative) {
 	return num;
 }
 
+/**
+ * Populate the main board with numbers and
+ * cover the bool game board
+ * @param board           the board that should contain numbers
+ * @param covered         the board that determines of a cell is covered or not
+ * @param numberOfRows    the boards' number of rows
+ * @param numberOfColumns the boards' number of columns
+ */
 void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
 	int row, column;
 
@@ -44,6 +57,8 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 	int maxNumberOfPowerups, maxNumberOfNegatives;
 	int numberOfPowerups = 0, numberOfNegatives = 0;
 
+	// calculate the maximum number of powerups and negatives based on board size
+	// and given percentage
 	maxNumberOfPowerups = (int)(numberOfRows * numberOfColumns * percentageOfPowerups / 100);
 	maxNumberOfNegatives = (int)(numberOfRows * numberOfColumns * percentageOfNegatives / 100);
 
@@ -67,12 +82,17 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 				number = randomNum(min, max, false);
 			}
 
+			// assign the number to the cell
 			*(board + row * numberOfColumns + column) = number;
+			// cover the cell
 			*(covered + row * numberOfColumns + column) = true;
 		}
 	}	
 
-	// Generate random position for exit tile.
+	// Determine max position for exit tile
+	// Since randomNum only works with a max of
+	// 2^n - 1, here we select a max that is a power
+	// of 2 that is within the bounds of the board
 	int powerOf2 = 1;
 	while(powerOf2 < numberOfRows * numberOfColumns) {
 		powerOf2 <<= 1;
@@ -87,6 +107,8 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 
 	int exitPosition = randomNum(1, powerOf2 - 1, false); 
 
+	// cell with a value of 0 is the exit position
+	// here, we set the exit position.
 	*(board + exitPosition) = 0;	
 
 	printf("\nNumber of powerups: %d/%d (%.2f)\n", 
@@ -98,6 +120,7 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 		numberOfColumns * numberOfRows, 
 		(float)((float) 100 *numberOfNegatives / (numberOfColumns * numberOfRows)));
 
+	// print the main board
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
 			printf("%-7.2f", *(board + row * numberOfColumns + column));
@@ -106,6 +129,17 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 	}	
 }
 
+/**
+ * Display the board.
+ * X - covered
+ * $ - bomb powerup (radius doubler)
+ * - - negative score
+ * + - positive score
+ * @param board           main board with numbers
+ * @param covered         board that determines which cells are covered
+ * @param numberOfRows    boards' number of rows
+ * @param numberOfColumns boards' number of columns
+ */
 void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
 	int row, column;
 
@@ -145,13 +179,28 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
 	}	
 } 
 
+/**
+ * Calculates the player's total score
+ * by adding all values of uncovered cells which
+ * have positive and negative numbers.
+ * @param  board           main board with numbers in cells
+ * @param  covered         board which determines which cells are covered or not
+ * @param  numberOfRows    boards' number of rows
+ * @param  numberOfColumns boards' number of columns
+ * @return                 total score
+ */
 float calculateScore(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
 	float totalScore = 0, score;
 
 	for(int row = 0; row <= numberOfRows; row++) {
 		for(int column = 0; column <= numberOfColumns; column++) {
+
+			// get score in cell
 			score = *(board + row * numberOfColumns + column);
 
+			// make sure we're only adding cells with a max absolute value of 15
+			// adding the exit cell to the total score doesn't matter since
+			// its value is 0.
 			if(!*(covered + row * numberOfColumns + column) && score > -15 && score < 15) {
 				totalScore += score;
 			}
@@ -161,9 +210,20 @@ float calculateScore(float *board, bool *covered, int numberOfRows, int numberOf
 	return totalScore;
 }
 
+/**
+ * Logs the given name, score, and time 
+ * in a file.
+ * @param name            player's name
+ * @param score           player's score
+ * @param time            time in seconds between starting the game and exit
+ * @param numberOfRows    board's number of rows
+ * @param numberOfColumns board's number of columns
+ */
 void logScore(char *name, float score, double time, int numberOfRows, int numberOfColumns) {
 	FILE *logFile = fopen("scores.log", "r");
 	bool writeHeader = false;
+
+	// Prompt to write header if file is empty or does not exist.
 	if(logFile == NULL) {
 		writeHeader = true;
 	}
@@ -180,6 +240,10 @@ void logScore(char *name, float score, double time, int numberOfRows, int number
 	fclose(logFile);
 }
 
+/**
+ * Exits the program with a message.
+ * @param message farewell
+ */
 void exitGame(char *message) {
 	if(*(message) == '\0') {
 		message = "You left too early!";
@@ -190,6 +254,17 @@ void exitGame(char *message) {
 	exit(0);
 }
 
+/**
+ * Prompt for bomb coordinates,
+ * uncover board, calculate scores
+ * and bomb radius, and,
+ * determine whether game is still on.
+ * @param board           main board with numbers
+ * @param covered         board which determines which cells are covered
+ * @param name            player's name
+ * @param numberOfRows    boards' number of rows
+ * @param numberOfColumns boards' number of columns
+ */
 void playGame(float *board, bool *covered, char *name, int numberOfRows, int numberOfColumns) {
 	int bombs = 1;
 	bombs += (int)(numberOfRows * numberOfColumns * 0.01);
@@ -203,14 +278,20 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 
 	while(bombs > 0 && !exitFound && lives > 0) {
 		printf("%sYou have %d bombs left\n", KNRM, bombs);
-		printf("If you want to stop playing input \"-1 -1\".\n");
+		printf("%sIf you want to stop playing input \"-1 -1\".\n", KRED);
 		printf("%sDrop the bomb at (x y): ", KNRM);
+
+		char xInput[9], yInput[9];
 		
+		scanf("%9s %9s", xInput, yInput);
+
 		// scanned is the number of succesfully scanned inputs.
-		int scanned = scanf("%d %d", &x, &y);
+		int scannedX = sscanf(xInput, "%9d", &x);
+		int scannedY = sscanf(yInput, "%9d", &y);
 		
-		if(scanned != 2) {
-			exitGame("Sorry, invalid input! You were exited from the game.");
+		if(scannedX != 1 || scannedY != 1) {
+			printf("%sSorry, invalid input! Try again.\n", KRED);
+			continue;
 		}
 
 		if(x == -1 || y == -1) {
@@ -219,7 +300,7 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 
 		// Check if bombing inside area.
 		if(!(x >= 0 && x < numberOfRows && y >= 0 && y < numberOfColumns)) {
-			printf("You're bombing outside the bombable range! Try again!");
+			printf("%sYou're bombing outside the bombable range! Try again!\n", KRED);
 			x = 0;
 			y = 0;
 			continue;
@@ -233,18 +314,31 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 		int start[] = {(x - bombRadius), (y - bombRadius)};
 		// calculate end position (bottom right)
 		int end[] = {(x + bombRadius), (y + bombRadius)};
+		
+		// make sure x coordinate for bomb
+		// starting point doesn't go beyond
+		// board bounds
 		if(start[0] < 0) {
 			start[0] = 0;
 		}
 
+		// make sure y coordinate for bomb
+		// starting point doesn't go beyond
+		// board bounds
 		if(start[1] < 0) {
 			start[1] = 0;
 		}
 
+		// make sure x coordinate for bomb
+		// end point doesn't go beyond
+		// board bounds
 		if(end[0] > numberOfRows - 1) {
 			end[0] = numberOfRows - 1;
 		}
 
+		// make sure y coordinate for bomb
+		// end point doesn't go beyond
+		// board bounds
 		if(end[1] > numberOfColumns - 1) {
 			end[1] = numberOfColumns - 1;
 		}
@@ -256,6 +350,10 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 				if(!*(covered + row * numberOfColumns + column)) {
 					continue;
 				}
+
+				// uncover, calculate round score, add bomb powerups,
+				// and check if exit is found only if we're not on
+				// an uncovered cell.
 
 				*(covered + row * numberOfColumns + column) = false;
 
@@ -277,16 +375,21 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 		bombRadius = 1;
 
 		if(bombPowerupsCount > 0 && bombs > 1) {
+			// double bomb radius by the number of bomb powerups
 			bombRadius = bombRadius << bombPowerupsCount;
 
+			// make sure that the bomb radius doesn't go back 
+			// to single digits.
 			if(bombPowerupsCount > 30) {
 				bombRadius = 2147483647;
 			}
 
+			// Inform user of bomb radius for next bombing.
 			printf("%sBang to the power of %d! Your next bomb's radius is now %d\n", KYEL, bombPowerupsCount, bombRadius);
 		}
 		
 
+		// Displat score in appropriate colors.
 		if(roundScore > 0) {
 			printf("%s", KGRN);
 		} else if(roundScore < 0) {
@@ -300,7 +403,8 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 			printf("%s", KGRN);
 		} else if(totalScore < 0) {
 			printf("%s", KRED);
-			// life is lost
+			// life is lost when total score 
+			// becomes negative
 			lives--;
 			printf("\nYou lost a life!\n");
 		} else {
@@ -311,10 +415,13 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 
 		printf("\nLives Left: %d", lives);
 
+		// Display the game board (not the one with numbers
+		// that would be cheating)
 		displayGame(board, covered, numberOfRows, numberOfColumns);
 		bombs--;
 	}
 
+	// record time that game ended
 	time_t end = time(NULL);
 	double time_spent = (double)(end - begin);
 
