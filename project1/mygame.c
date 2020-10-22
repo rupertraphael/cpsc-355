@@ -1,3 +1,9 @@
+/**
+ * Project (CPSC 355) Part A
+ * Author: Rupert Raphael Amodia (30085822)
+ * TA: Abdelghani Guerbas
+ */
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,10 +78,12 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 			// should be placed on the board
 			dice = randomNum(1, diceMax - 1, false); 
 
-			if(dice <= diceMax * percentageOfNegatives / 100 && numberOfNegatives <= maxNumberOfNegatives) {
+			if(dice <= diceMax * percentageOfNegatives / 100 
+				&& numberOfNegatives <= maxNumberOfNegatives) {
 				number = randomNum(min, max, true);
 				numberOfNegatives++;
-			} else if (dice <= diceMax * (percentageOfPowerups + percentageOfNegatives) / 100 && numberOfPowerups <= maxNumberOfPowerups) {
+			} else if (dice <= diceMax * (percentageOfPowerups + percentageOfNegatives) / 100 
+				&& numberOfPowerups <= maxNumberOfPowerups) {
 				number = 69;
 				numberOfPowerups++;
 			} else {
@@ -131,7 +139,7 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 
 /**
  * Display the board.
- * X - covered
+ * X - covered/not bombed yet
  * $ - bomb powerup (radius doubler)
  * - - negative score
  * + - positive score
@@ -149,6 +157,9 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
 
 	bool uncovered = false;
 
+	// Loop through the boards, 
+	// display appropriate character to represent
+	// main board value.
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
 			number = *(board + row * numberOfColumns + column);
@@ -162,16 +173,12 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
 			}
 
 			if(number > 0 && number <= 15) {
-				// printf("%-2s", "\u2795");
 				printf("%s%-3s", KGRN, "+");
 			} else if (number < 0 && number >= -15) {
-				// printf("%-2s", "\u274C");
 				printf("%s%-3s", KRED, "-");
 			} else if (number == 0) {
-				// printf("%-2s", "\u274C");
 				printf("%s%-3s", KWHT, "*");
 			} else {
-				// printf("%-2s", "\U0001F4B0");
 				printf("%s%-3s", KYEL, "$");
 			}
 		}
@@ -432,6 +439,11 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 	logScore(name, totalScore, time_spent, numberOfRows, numberOfColumns);
 }
 
+/**
+ * Display n top scores which is saved
+ * in a log file in the same directory.
+ * @param n number of top scores to display
+ */
 void displayTopScores(int n) {
 	FILE *logFile = fopen("scores.log", "r");
 
@@ -443,8 +455,12 @@ void displayTopScores(int n) {
 	char name[50], boardSize[50];
 	float score, time;
 
+	// Will later on determine the total number of lines
+	// stored in the log file.
 	int count = 0;
 
+	// define arrays for scores, times, and
+	// names. 
 	float *scores = malloc(sizeof(float));
 	float *times = malloc(sizeof(float));
 	char (*names)[sizeof(name)] = malloc(sizeof(char[1][50]));
@@ -473,8 +489,9 @@ void displayTopScores(int n) {
 	}
 
 	int row;
+
+	// Create and populate array of indices.
 	int sortedRows[count];
-	// Store the document numbers in an array.
 	for(row = 0; row < count; row++) {
 		sortedRows[row] = row; // still unsorted.
 	}
@@ -482,10 +499,10 @@ void displayTopScores(int n) {
 	bool swapped = false;
 	int tempRow;
 	
-	// Sort sorted rows using bubble sort by comparing the frequencies of the
-	// given word in each document.
+	// Sort the unsorted array of indices using bubble sort by 
+	// comparing the corresponding scores.
 	// This loop ends after the iteration where it has gone through all of 
-	// the sorted rows and hasn't swapped any of them. 
+	// the sorted rows and hasn't swapped any of them anymore. 
 	do {
 		swapped = false;
 
@@ -505,10 +522,13 @@ void displayTopScores(int n) {
 	}
 
 	printf("%sTop %d Scores:%s\n", KYEL, n, KNRM);
-
 	for(row = 0; row < n; row++) {
 		printf("%d. %s\t%.2f\t%.2f\n", row + 1, names[sortedRows[row]], *(scores + sortedRows[row]), *(times + sortedRows[row]));
 	}
+
+	free(scores);
+	free(times);
+	free(names);
 
 	fclose(logFile);
 }
@@ -524,12 +544,17 @@ int main(int argc, char *argv[]) {
 
 	// Get the number of rows and columns from the 
 	// command line arguments.
-	numberOfRows = (int) strtol(argv[2], &argv[2], 10);
-	numberOfColumns = (int) strtol(argv[3], &argv[3], 10);
+	bool rowScanned = sscanf(argv[2], "%9d", &numberOfRows) == 1;
+	bool columnScanned = sscanf(argv[3], "%9d", &numberOfColumns) == 1;
+
+	if(!rowScanned || !columnScanned) {
+		char error[] = "Sorry, invalid input.\nPlease run program with string, integer, and integer arguments";
+
+		exitGame(error);
+	}
 
 	if(numberOfRows < 10 || numberOfColumns < 10) {
-		printf("%sSorry, invalid board size. A board must be at least 10 x 10 in size.", KRED);
-		exit(0);
+		exitGame("Sorry, invalid board size. A board must be at least 10 x 10 in size.\n");
 	}
 
 	char* name = argv[1];
@@ -542,10 +567,10 @@ int main(int argc, char *argv[]) {
 
 	int numOfTopScores = 0;
 
-	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0. ");
-	int scanned = scanf("%d", &numOfTopScores);
+	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
+	bool scanned = scanf("%d", &numOfTopScores) == 1;
 
-	if(scanned == 1) {
+	if(scanned) {
 		displayTopScores(numOfTopScores);
 	} else {
 		exitGame("Invalid input.");
@@ -557,10 +582,10 @@ int main(int argc, char *argv[]) {
 
 	playGame(*board, covered, name, numberOfRows, numberOfColumns);
 
-	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0. ");
-	scanned = scanf("%d", &numOfTopScores);
+	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
+	scanned = scanf("%d", &numOfTopScores) == 1;
 
-	if(scanned == 1) {
+	if(scanned) {
 		displayTopScores(numOfTopScores);
 	} else {
 		exitGame("Invalid input.");
