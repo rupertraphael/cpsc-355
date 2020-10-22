@@ -566,15 +566,21 @@ int main(int argc, char *argv[]) {
 	bool covered[numberOfRows * numberOfColumns];
 
 	int numOfTopScores = 0;
+	char stringNumOfTopScores[9];
 
-	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
-	bool scanned = scanf("%d", &numOfTopScores) == 1;
+	bool scanned = false;
 
-	if(scanned) {
-		displayTopScores(numOfTopScores);
-	} else {
-		exitGame("Invalid input.");
-	}
+	do {
+		printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
+		scanned = scanf("%9s", stringNumOfTopScores) == 1;
+		scanned = sscanf(stringNumOfTopScores, "%9d", &numOfTopScores) == 1;
+	} while(!scanned);
+		
+	displayTopScores(numOfTopScores);
+	
+	printf("\nHit Enter to continue...");
+	getchar();
+	scanf("%c", stringNumOfTopScores);
 
 	initializeGame(*board, covered, numberOfRows, numberOfColumns);
 	
@@ -582,14 +588,13 @@ int main(int argc, char *argv[]) {
 
 	playGame(*board, covered, name, numberOfRows, numberOfColumns);
 
-	printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
-	scanned = scanf("%d", &numOfTopScores) == 1;
-
-	if(scanned) {
-		displayTopScores(numOfTopScores);
-	} else {
-		exitGame("Invalid input.");
-	}
+	do {
+		printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
+		scanned = scanf("%9s", stringNumOfTopScores) == 1;
+		scanned = sscanf(stringNumOfTopScores, "%9d", &numOfTopScores) == 1;
+	} while(!scanned);
+	
+	displayTopScores(numOfTopScores);
 
 	printf("%sThank you for playing bomberman!", KGRN);
 }
