@@ -551,8 +551,6 @@ void displayTopScores(int n) {
 	float *times = malloc(sizeof(float));
 	char (*names)[sizeof(name)] = malloc(sizeof(char[1][50]));
 
-	char startOfName;
-
 	while(!feof(logFile)) {
 		fscanf(logFile, "%s %f %f", name, &score, &time);
 
@@ -560,10 +558,9 @@ void displayTopScores(int n) {
 		fgets(string, sizeof(string), logFile);
 		count++;
 		names = realloc(names, count * sizeof(char[count][50]));
-		int index = 1;
-		names[count - 1][0] = startOfName;
-		while(index < 49) {
-			names[count - 1][index] = name[index - 1];
+		int index = 0;
+		while(index < 50) {
+			names[count - 1][index] = name[index];
 			index++;
 		}
 
@@ -689,5 +686,5 @@ int main(int argc, char *argv[]) {
 	
 	displayTopScores(numOfTopScores);
 
-	printf("%sThank you for playing bomberman!", KGRN);
+	printf("%sThank you for playing bomberman!\n", KGRN);
 }
