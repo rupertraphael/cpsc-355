@@ -53,6 +53,7 @@ float randomNum(int min, int max, bool negative) {
  * @param covered         the board that determines of a cell is covered or not
  * @param numberOfRows    the boards' number of rows
  * @param numberOfColumns the boards' number of columns
+ * @param landminePosition coordinates of the landmine
  */
 void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfColumns, int landminePositionArray[2]) {
 	int row, column;
@@ -247,6 +248,7 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
  * @param 	lives             player's number of lives
  * @param 	bombPowerupsCount player's number of bomb powerups for the round
  * @param 	exitFound         determines whether the exit has been found
+ * @param 	landminePosition  coordinates of the landmine
  * @return 	roundScore		  player's score for the round (not reset)		
  */
 float calculateScore(
@@ -264,8 +266,6 @@ float calculateScore(
 	int landminePosition[2]) {
 
 	float roundScore = 0, score;
-
-	printf("\n bombRadius: %d \n", bombRadius);
 
 	// calculate start position (top left)
 	int start[] = {(x - bombRadius), (y - bombRadius)};
@@ -320,6 +320,7 @@ float calculateScore(
 				// count bomb powerups
 				(*bombPowerupsCount)++;
 			} else if (score == 71) {
+				// trigger is triggered, landmine goes kaboom!
 				roundScore += calculateScore(
 					board, 
 					covered, 
