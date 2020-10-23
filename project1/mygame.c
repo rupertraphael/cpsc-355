@@ -553,7 +553,7 @@ void displayTopScores(int n) {
 
 	char startOfName;
 
-	while((startOfName = fgetc(logFile)) != EOF) {
+	while(!feof(logFile)) {
 		fscanf(logFile, "%s %f %f", name, &score, &time);
 
 		// skip to end of line
@@ -572,6 +572,8 @@ void displayTopScores(int n) {
 		scores[count - 1] = score;
 		times[count - 1] = time;
 	}
+
+	count -= 1;
 
 	int row;
 
