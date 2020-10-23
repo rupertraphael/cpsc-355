@@ -54,7 +54,7 @@ float randomNum(int min, int max, bool negative) {
  * @param numberOfRows    the boards' number of rows
  * @param numberOfColumns the boards' number of columns
  */
-void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
+void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfColumns, int landminePositionArray[2]) {
 	int row, column;
 
 	int min = 0,max = 15;
@@ -115,26 +115,68 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 
 	int exitPosition = randomNum(1, powerOf2 - 1, false); 
 
+	if(*(board + exitPosition) < 0) {
+		numberOfNegatives--;
+	} else if(*(board + exitPosition) == 69) {
+		numberOfPowerups--;
+	}
 	// cell with a value of 0 is the exit position
 	// here, we set the exit position.
 	*(board + exitPosition) = 0;	
+
+	// Suprise pack: Landmine and Trigger
+	// If trigger is bombed, landmine goes off.
+	// These shouldn't replace the exit.
+	int landminePosition = 0;
+	do {
+		landminePosition = randomNum(1, powerOf2 - 1, false); 
+	} while(landminePosition == exitPosition);
+	printf("\nlandmine: %d\n", landminePosition);
+	*(board + landminePosition) = 70;	
+
+	// Trigger shouldn't replace landmine.
+	int triggerPosition = 0;
+	do {
+		triggerPosition = randomNum(1, powerOf2 - 1, false); 
+	} while(triggerPosition == exitPosition || triggerPosition == landminePosition);
+	*(board + triggerPosition) = 71;	
 
 	printf("\nNumber of powerups: %d/%d (%.2f)\n", 
 		numberOfPowerups, 
 		numberOfColumns * numberOfRows, 
 		(float)((float) 100 * numberOfPowerups / (numberOfColumns * numberOfRows)));
-	printf("Number of negatives: %d/%d (%.2f)\n\n", 
+	printf("Number of negatives: %d/%d (%.2f)\n", 
 		numberOfNegatives, 
 		numberOfColumns * numberOfRows, 
 		(float)((float) 100 *numberOfNegatives / (numberOfColumns * numberOfRows)));
 
+	int triggerPositionArray[2];
+
 	// print the main board
 	for(row = 0; row < numberOfRows; row++) {
 		for(column = 0; column < numberOfColumns; column++) {
+			if(*(board + row * numberOfColumns + column) == 70) {
+				landminePositionArray[0] = row;
+				landminePositionArray[1] = column;
+			}
+
+			if(*(board + row * numberOfColumns + column) == 71) {
+				triggerPositionArray[0] = row;
+				triggerPositionArray[1] = column;
+			}
+
 			printf("%-7.2f", *(board + row * numberOfColumns + column));
 		}
 		printf("\n");
 	}	
+
+	printf("Landmine Position: %d,%d\n", 
+		landminePositionArray[0], 
+		landminePositionArray[1]);
+
+	printf("Trigger Position: %d,%d\n", 
+		triggerPositionArray[0],
+		triggerPositionArray[1]);
 }
 
 /**
@@ -178,6 +220,10 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
 				printf("%s%-3s", KRED, "-");
 			} else if (number == 0) {
 				printf("%s%-3s", KWHT, "*");
+			} else if (number == 70) {
+				printf("%s%-3s", KMAG, "L");
+			} else if (number == 71) {
+				printf("%s%-3s", KMAG, "T");
 			} else {
 				printf("%s%-3s", KYEL, "$");
 			}
@@ -214,9 +260,12 @@ float calculateScore(
 	float *totalScore,
 	int *lives,
 	int *bombPowerupsCount,
-	bool *exitFound) {
+	bool *exitFound,
+	int landminePosition[2]) {
 
 	float roundScore = 0, score;
+
+	printf("\n bombRadius: %d \n", bombRadius);
 
 	// calculate start position (top left)
 	int start[] = {(x - bombRadius), (y - bombRadius)};
@@ -270,6 +319,20 @@ float calculateScore(
 			} else if (score == 69) {
 				// count bomb powerups
 				(*bombPowerupsCount)++;
+			} else if (score == 71) {
+				roundScore += calculateScore(
+					board, 
+					covered, 
+					numberOfRows, 
+					numberOfColumns, 
+					landminePosition[0],
+					landminePosition[1],
+					1,
+					totalScore,
+					lives,
+					bombPowerupsCount,
+					exitFound,
+					landminePosition);
 			} else if (score == 0) {
 				*exitFound = true;
 			}
@@ -341,7 +404,7 @@ void exitGame(char *message) {
  * @param numberOfRows    boards' number of rows
  * @param numberOfColumns boards' number of columns
  */
-void playGame(float *board, bool *covered, char *name, int numberOfRows, int numberOfColumns) {
+void playGame(float *board, bool *covered, char *name, int numberOfRows, int numberOfColumns, int landminePosition[2]) {
 	int bombs = 1;
 	bombs += (int)(numberOfRows * numberOfColumns * 0.02);
 	int x, y;
@@ -387,7 +450,6 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 		roundScore = 0;
 
 		bombPowerupsCount = 0;
-		bombRadius = 1;
 
 		roundScore = calculateScore(
 			board, 
@@ -400,7 +462,10 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 			&totalScore,
 			&lives,
 			&bombPowerupsCount,
-			&exitFound);
+			&exitFound,
+			landminePosition);
+
+		bombRadius = 1;
 
 		// Display the game board (not the one with numbers
 		// that would be cheating)
@@ -607,11 +672,12 @@ int main(int argc, char *argv[]) {
 
 	fclose(logFile);
 
-	initializeGame(*board, covered, numberOfRows, numberOfColumns);
+	int landminePosition[2];
+	initializeGame(*board, covered, numberOfRows, numberOfColumns, landminePosition);
 	
 	displayGame(*board, covered, numberOfRows, numberOfColumns);
 
-	playGame(*board, covered, name, numberOfRows, numberOfColumns);
+	playGame(*board, covered, name, numberOfRows, numberOfColumns, landminePosition);
 
 	do {
 		printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
