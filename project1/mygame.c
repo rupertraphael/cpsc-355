@@ -187,34 +187,103 @@ void displayGame(float *board, bool *covered, int numberOfRows, int numberOfColu
 } 
 
 /**
- * Calculates the player's total score
- * by adding all values of uncovered cells which
- * have positive and negative numbers.
- * @param  board           main board with numbers in cells
- * @param  covered         board which determines which cells are covered or not
- * @param  numberOfRows    boards' number of rows
- * @param  numberOfColumns boards' number of columns
- * @return                 total score
+ * Calculates the player's score,
+ * lives, bomb powerups count, and determines
+ * if exit is found.
+ * @param 	board             main board with values
+ * @param 	covered           board that determines which cells are covered
+ * @param 	numberOfRows      the boards' number of rows
+ * @param 	numberOfColumns   boards' number of columns
+ * @param 	x                 x coordinate to bomb
+ * @param 	y                 y coordinate to bomb
+ * @param 	bombRadius        determines how large the bomb area is going to be
+ * @param 	totalScore        player's score; becomes 0 when it becomes negative and lives > 0
+ * @param 	lives             player's number of lives
+ * @param 	bombPowerupsCount player's number of bomb powerups for the round
+ * @param 	exitFound         determines whether the exit has been found
+ * @return 	roundScore		  player's score for the round (not reset)		
  */
-float calculateScore(float *board, bool *covered, int numberOfRows, int numberOfColumns) {
-	float totalScore = 0, score;
+float calculateScore(
+	float *board, 
+	bool *covered, 
+	int numberOfRows, 
+	int numberOfColumns, 
+	int x,
+	int y,
+	int bombRadius,
+	float *totalScore,
+	int *lives,
+	int *bombPowerupsCount,
+	bool *exitFound) {
 
-	for(int row = 0; row <= numberOfRows; row++) {
-		for(int column = 0; column <= numberOfColumns; column++) {
+	float roundScore = 0, score;
 
-			// get score in cell
+	// calculate start position (top left)
+	int start[] = {(x - bombRadius), (y - bombRadius)};
+	// calculate end position (bottom right)
+	int end[] = {(x + bombRadius), (y + bombRadius)};
+	
+	// make sure x coordinate for bomb
+	// starting point doesn't go beyond
+	// board bounds
+	if(start[0] < 0) {
+		start[0] = 0;
+	}
+
+	// make sure y coordinate for bomb
+	// starting point doesn't go beyond
+	// board bounds
+	if(start[1] < 0) {
+		start[1] = 0;
+	}
+
+	// make sure x coordinate for bomb
+	// end point doesn't go beyond
+	// board bounds
+	if(end[0] > numberOfRows - 1) {
+		end[0] = numberOfRows - 1;
+	}
+
+	// make sure y coordinate for bomb
+	// end point doesn't go beyond
+	// board bounds
+	if(end[1] > numberOfColumns - 1) {
+		end[1] = numberOfColumns - 1;
+	}
+
+	for(int row = start[0]; row <= end[0]; row++) {
+		for(int column = start[1]; column <= end[1]; column++) {
+			if(!*(covered + row * numberOfColumns + column)) {
+				continue;
+			}
+
+			// uncover, calculate round score, add bomb powerups,
+			// and check if exit is found only if we're not on
+			// an uncovered cell.
+			*(covered + row * numberOfColumns + column) = false;
+
 			score = *(board + row * numberOfColumns + column);
 
-			// make sure we're only adding cells with a max absolute value of 15
-			// adding the exit cell to the total score doesn't matter since
-			// its value is 0.
-			if(!*(covered + row * numberOfColumns + column) && score > -15 && score < 15) {
-				totalScore += score;
+			if((score > 0 && score <= 15) || (score < 0 && score >= -15)) {
+				*totalScore += score;
+				roundScore += score;
+			} else if (score == 69) {
+				// count bomb powerups
+				(*bombPowerupsCount)++;
+			} else if (score == 0) {
+				*exitFound = true;
 			}
 		}
 	}
 
-	return totalScore;
+	// Make lives 0 when total score is less than 0
+	// then if score < 0 and lives > 0,
+	// then make score 0.
+	if(*totalScore < 0 && --(*lives) > 0) {
+		*totalScore = 0;
+	}
+
+	return roundScore;
 }
 
 /**
@@ -274,7 +343,7 @@ void exitGame(char *message) {
  */
 void playGame(float *board, bool *covered, char *name, int numberOfRows, int numberOfColumns) {
 	int bombs = 1;
-	bombs += (int)(numberOfRows * numberOfColumns * 0.01);
+	bombs += (int)(numberOfRows * numberOfColumns * 0.02);
 	int x, y;
 	int bombRadius = 1, bombPowerupsCount = 0;
 	int lives = 3;
@@ -317,69 +386,25 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 
 		roundScore = 0;
 
-		// calculate start position (top left)
-		int start[] = {(x - bombRadius), (y - bombRadius)};
-		// calculate end position (bottom right)
-		int end[] = {(x + bombRadius), (y + bombRadius)};
-		
-		// make sure x coordinate for bomb
-		// starting point doesn't go beyond
-		// board bounds
-		if(start[0] < 0) {
-			start[0] = 0;
-		}
-
-		// make sure y coordinate for bomb
-		// starting point doesn't go beyond
-		// board bounds
-		if(start[1] < 0) {
-			start[1] = 0;
-		}
-
-		// make sure x coordinate for bomb
-		// end point doesn't go beyond
-		// board bounds
-		if(end[0] > numberOfRows - 1) {
-			end[0] = numberOfRows - 1;
-		}
-
-		// make sure y coordinate for bomb
-		// end point doesn't go beyond
-		// board bounds
-		if(end[1] > numberOfColumns - 1) {
-			end[1] = numberOfColumns - 1;
-		}
-
 		bombPowerupsCount = 0;
-
-		for(int row = start[0]; row <= end[0]; row++) {
-			for(int column = start[1]; column <= end[1]; column++) {
-				if(!*(covered + row * numberOfColumns + column)) {
-					continue;
-				}
-
-				// uncover, calculate round score, add bomb powerups,
-				// and check if exit is found only if we're not on
-				// an uncovered cell.
-
-				*(covered + row * numberOfColumns + column) = false;
-
-				float score = *(board + row * numberOfColumns + column);
-
-				if((score > 0 && score <= 15) || (score < 0 && score >= -15)) {
-					roundScore += score;
-				} else if (score == 69) {
-					// count bomb powerups
-					bombPowerupsCount++;
-				} else if (score == 0) {
-					exitFound = true;
-				}
-			}
-		}
-
-		totalScore = calculateScore(board, covered, numberOfRows, numberOfColumns);
-
 		bombRadius = 1;
+
+		roundScore = calculateScore(
+			board, 
+			covered, 
+			numberOfRows, 
+			numberOfColumns, 
+			x,
+			y,
+			bombRadius,
+			&totalScore,
+			&lives,
+			&bombPowerupsCount,
+			&exitFound);
+
+		// Display the game board (not the one with numbers
+		// that would be cheating)
+		displayGame(board, covered, numberOfRows, numberOfColumns);
 
 		if(bombPowerupsCount > 0 && bombs > 1) {
 			// double bomb radius by the number of bomb powerups
@@ -394,37 +419,25 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 			// Inform user of bomb radius for next bombing.
 			printf("%sBang to the power of %d! Your next bomb's radius is now %d\n", KYEL, bombPowerupsCount, bombRadius);
 		}
-		
 
-		// Displat score in appropriate colors.
 		if(roundScore > 0) {
 			printf("%s", KGRN);
-		} else if(roundScore < 0) {
-			printf("%s", KRED);
 		} else {
 			printf("%s", KNRM);
 		}
-		printf("Score for this round: %.2f%s\n", roundScore, KNRM);
+
+		printf("Round Score: %.2f\n", roundScore);
 
 		if(totalScore > 0) {
 			printf("%s", KGRN);
-		} else if(totalScore < 0) {
-			printf("%s", KRED);
-			// life is lost when total score 
-			// becomes negative
-			lives--;
-			printf("\nYou lost a life!\n");
 		} else {
 			printf("%s", KNRM);
 		}
 
-		printf("Total Score: %.2f", totalScore);
+		printf("Total Score: %.2f\n", totalScore);
 
-		printf("\nLives Left: %d", lives);
+		printf("\nLives Left: %d\n", lives);
 
-		// Display the game board (not the one with numbers
-		// that would be cheating)
-		displayGame(board, covered, numberOfRows, numberOfColumns);
 		bombs--;
 	}
 
@@ -447,6 +460,12 @@ void playGame(float *board, bool *covered, char *name, int numberOfRows, int num
 void displayTopScores(int n) {
 	FILE *logFile = fopen("scores.log", "r");
 
+	if(logFile == NULL) {
+		printf("Scores file doesn't exist.");
+
+		return;
+	}
+
 	char string[100];
 
 	// Skips first line which is the log file column names
@@ -468,9 +487,8 @@ void displayTopScores(int n) {
 	char startOfName;
 
 	while((startOfName = fgetc(logFile)) != EOF) {
-		fscanf(logFile, "%s", name);
-		fscanf(logFile, "%f", &score);
-		fscanf(logFile, "%f", &time);
+		fscanf(logFile, "%s %f %f", name, &score, &time);
+
 		// skip to end of line
 		fgets(string, sizeof(string), logFile);
 		count++;
@@ -523,7 +541,7 @@ void displayTopScores(int n) {
 
 	printf("%sTop %d Scores:%s\n", KYEL, n, KNRM);
 	for(row = 0; row < n; row++) {
-		printf("%d. %s\t%.2f\t%.2f\n", row + 1, names[sortedRows[row]], *(scores + sortedRows[row]), *(times + sortedRows[row]));
+		printf("%3d. %s\t%.2f\t%.2f\n", row + 1, names[sortedRows[row]], *(scores + sortedRows[row]), *(times + sortedRows[row]));
 	}
 
 	free(scores);
@@ -570,17 +588,24 @@ int main(int argc, char *argv[]) {
 
 	bool scanned = false;
 
-	do {
-		printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
-		scanned = scanf("%9s", stringNumOfTopScores) == 1;
-		scanned = sscanf(stringNumOfTopScores, "%9d", &numOfTopScores) == 1;
-	} while(!scanned);
-		
-	displayTopScores(numOfTopScores);
-	
-	printf("\nHit Enter to continue...");
-	getchar();
-	scanf("%c", stringNumOfTopScores);
+	FILE *logFile = fopen("scores.log", "r");
+
+	if(logFile != NULL) {
+		do {
+			printf("How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.\n");
+			scanned = scanf("%9s", stringNumOfTopScores) == 1;
+			scanned = sscanf(stringNumOfTopScores, "%9d", &numOfTopScores) == 1;
+		} while(!scanned && logFile != NULL);
+
+		fclose(logFile);
+		displayTopScores(numOfTopScores);
+
+		printf("\nHit Enter to continue...");
+		getchar();
+		scanf("%c", stringNumOfTopScores);
+	}
+
+	fclose(logFile);
 
 	initializeGame(*board, covered, numberOfRows, numberOfColumns);
 	
