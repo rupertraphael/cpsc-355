@@ -366,8 +366,9 @@ void logScore(char *name, float score, double time, int numberOfRows, int number
 	// Prompt to write header if file is empty or does not exist.
 	if(logFile == NULL) {
 		writeHeader = true;
+	} else {
+		fclose(logFile);
 	}
-	fclose(logFile);
 
 	logFile = fopen("scores.log", "ab+");
 
@@ -670,8 +671,6 @@ int main(int argc, char *argv[]) {
 		getchar();
 		scanf("%c", stringNumOfTopScores);
 	}
-
-	fclose(logFile);
 
 	int landminePosition[2];
 	initializeGame(*board, covered, numberOfRows, numberOfColumns, landminePosition);
