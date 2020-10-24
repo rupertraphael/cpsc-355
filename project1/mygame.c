@@ -166,6 +166,8 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 				triggerPositionArray[1] = column;
 
 				printf("%s%-10s", KMAG, "T");
+			} else if(*(board + row * numberOfColumns + column) == 69) {
+				printf("%s%-10s", KYEL, "$");
 			} else {
 				printf("%s%-10.2f", KNRM, *(board + row * numberOfColumns + column));
 			}
