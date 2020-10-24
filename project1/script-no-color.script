@@ -1,0 +1,320 @@
+Script started on 2020-10-23 21:31:03-06:00
+]0;rupertraphael.amodia@csa2:~/cpsc-355/project1[rupertraphael.amodia@csa2 project1]$ mya[K[K[K./mgy[K[Kygame 20[K[Kr[Kbomberman 25 23
+How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.
+100
+Top 10 Scores:
+  1. rupert	157.02	8.00
+  2. bomberman	89.08	65.00
+  3. rupert	0.00	12.00
+  4. rupert	0.00	13.00
+  5. rupert	0.00	65.00
+  6. rupert	0.00	11.00
+  7. testing	0.00	14.00
+  8. rupert	-16.85	60.00
+  9. rupert	-27.33	15.00
+ 10. rupert	-27.51	8.00
+
+Hit Enter to continue...
+
+landmine: 1
+
+Number of powerups: 116/575 (20.17)
+Number of negatives: 230/575 (40.00)
+3.20      L         0.84      -13.60    4.23      -5.48     -4.42     11.43     9.43      0.60      7.96      -1.29     5.12      -6.48     4.69      $         $         10.83     $         -0.52     -9.31     $         2.87      
+-1.31     -3.14     6.24      12.03     -7.09     11.25     -7.63     $         -5.79     -5.77     $         0.60      -12.24    13.27     $         -6.91     -5.79     -7.75     -7.52     7.63      8.54      12.49     $         
+-7.82     -3.89     -0.53     12.96     13.26     14.36     0.72      11.98     $         8.87      -11.22    11.72     $         4.41      13.41     -3.25     12.45     -7.53     -13.03    $         -3.06     12.52     -2.68     
+11.00     -2.96     -8.21     4.40      -2.95     3.39      $         5.65      5.49      -0.21     $         -5.25     $         13.20     5.40      -5.61     1.40      10.43     9.38      2.78      $         $         -3.60     
+10.58     -12.00    -11.87    9.62      -10.92    $         9.89      $         $         -1.68     12.08     -7.46     -12.48    2.66      5.35      -6.77     $         -9.87     13.27     -13.62    -2.36     -5.29     -0.82     
+$         $         $         -0.95     $         0.94      11.29     $         2.16      $         -0.66     8.63      -5.76     -2.86     $         $         0.61      4.74      -4.49     -5.97     -0.48     5.19      $         
+10.15     3.93      $         6.85      T         12.46     14.87     -7.60     -7.36     $         $         6.69      14.27     8.94      -7.67     -5.91     -1.91     -3.44     7.91      $         6.67      -3.24     -6.12     
+-5.58     $         -14.97    4.21      14.89     11.35     8.14      -8.46     $         -2.55     -11.91    10.24     $         -5.86     -2.05     8.74      0.36      $         -4.09     -9.15     $         -10.97    -3.59     
+$         2.55      $         -7.52     0.91      -10.43    -9.69     -5.20     -1.13     -13.49    -12.64    -14.84    -14.38    $         10.21     2.65      -2.18     -0.68     -14.42    -13.00    -12.29    14.93     $         
+$         -14.58    $         -7.94     -2.15     -3.14     9.45      -14.26    1.45      -3.50     -14.29    -1.43     1.97      10.43     -5.86     -4.59     -14.87    12.93     1.84      1.77      -8.45     -3.34     $         
+$         -3.20     $         14.23     -8.21     11.29     $         $         13.62     3.52      8.71      $         -7.84     -5.31     -6.00     -4.30     -8.07     $         -2.31     -1.12     -14.37    5.28      5.17      
+$         -11.75    13.86     -5.35     -2.08     $         -5.26     1.80      $         -12.26    -13.93    2.45      -1.15     $         -14.20    0.00      -12.42    -7.16     -14.77    3.81      -0.96     -7.26     -12.93    
+-2.50     -12.99    $         -11.16    13.00     -7.33     -6.02     1.54      0.26      14.32     11.85     -2.21     13.41     13.84     -8.56     $         -4.53     8.07      13.75     $         3.57      $         13.54     
+12.87     5.97      12.40     $         $         -2.78     4.39      -11.96    $         10.78     -8.95     12.37     -4.37     -13.12    $         8.79      -0.84     $         14.22     9.20      10.29     -9.98     $         
+$         -6.67     $         -13.49    $         4.48      10.57     -6.79     8.73      5.09      -6.45     11.23     14.48     -5.42     $         -9.91     -10.90    -8.27     -6.95     $         1.86      14.05     -5.56     
+13.05     $         -2.80     -2.48     0.75      -8.89     13.10     -6.21     $         -2.79     -11.82    -3.78     12.81     -3.75     $         $         $         4.09      $         11.16     -4.91     -11.44    $         
+-14.62    2.12      6.97      $         -1.95     -8.80     2.11      1.50      8.61      -2.44     4.98      -7.40     -12.90    -13.67    $         -7.76     $         -3.61     -12.50    $         -13.04    $         14.77     
+-13.24    13.96     -8.28     6.23      4.43      -4.12     $         -6.60     4.69      7.80      -9.92     4.72      -8.24     1.84      -12.10    8.57      7.70      -1.18     $         13.71     $         -5.98     13.03     
+$         -10.30    1.37      $         -6.07     14.85     0.91      -7.00     14.77     13.75     -3.39     -5.03     $         8.14      $         $         $         -12.31    7.37      -1.84     -7.75     13.82     $         
+-3.89     -14.10    -2.67     -6.96     1.31      -7.75     $         -9.42     -1.53     10.72     $         -2.91     14.88     1.87      $         1.09      -2.92     -3.94     8.14      -12.52    2.10      9.25      4.05      
+$         $         14.74     -8.95     5.03      -5.47     $         3.91      0.23      9.63      -9.25     -9.12     $         -1.76     2.58      $         -4.87     -3.73     -14.74    -5.77     -7.92     7.25      $         
+8.27      $         -0.17     -12.50    -6.13     -12.75    $         0.71      11.55     -0.03     8.39      -13.85    11.64     5.17      9.25      -6.07     $         2.53      $         -5.69     -6.04     3.70      -9.20     
+10.09     7.54      -11.98    -7.97     -0.15     $         -5.43     $         8.90      1.91      -14.86    -2.17     $         -12.88    $         7.41      -12.80    $         -0.03     1.01      $         -2.74     -1.46     
+-14.82    $         $         $         $         3.96      $         9.06      0.86      2.34      1.53      14.42     2.52      12.34     10.10     9.91      14.15     8.57      4.27      12.66     1.63      7.34      9.93      
+10.41     12.30     6.42      7.91      5.89      3.79      11.38     13.94     1.35      11.42     13.23     7.28      11.75     9.12      2.79      13.87     4.10      7.08      3.40      0.53      14.78     9.98      7.48      
+Landmine Position: 0,1
+Trigger Position: 6,4
+
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+You have 12 bombs left
+If you want to stop playing input "-1 -1".
+Drop the bomb at (x y): x y
+Sorry, invalid input! Try again.
+You have 12 bombs left
+If you want to stop playing input "-1 -1".
+Drop the bomb at (x y): 6 4   19 19
+Bombing position: 19, 19...
+
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  +  -  -  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  +  -  +  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  -  -  -  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+Round Score: -32.91
+Total Score: 0.00
+
+Lives Left: 2
+You have 11 bombs left
+If you want to stop playing input "-1 -1".
+Drop the bomb at (x y): 6 4
+Bombing position: 6, 4...
+
++  L  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+-  -  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  -  $  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  +  T  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  +  +  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  +  -  -  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  +  -  +  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  -  -  -  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+Bang to the power of 1! Your next bomb's radius is now 2
+Round Score: 55.56
+Total Score: 55.56
+
+Lives Left: 2
+You have 10 bombs left
+If you want to stop playing input "-1 -1".
+Drop the bomb at (x y): 19 0
+Bombing position: 19, 0...
+
++  L  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+-  -  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  -  $  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  +  T  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  +  +  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+-  +  -  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+$  -  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  +  -  -  X  X  
+-  -  -  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  +  -  +  X  X  
+$  $  +  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  -  -  -  X  X  
++  $  -  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+Bang to the power of 4! Your next bomb's radius is now 16
+Round Score: -14.29
+Total Score: 41.27
+
+Lives Left: 2
+You have 9 bombs left
+If you want to stop playing input "-1 -1".
+Drop the bomb at (x y): 9 9
+Bombing position: 9, 9...
+
++  L  +  -  +  -  -  +  +  +  +  -  +  -  +  $  $  +  $  -  -  $  +  
+-  -  +  +  -  +  -  $  -  -  $  +  -  +  $  -  -  -  -  +  +  +  $  
+-  -  -  +  +  +  +  +  $  +  -  +  $  +  +  -  +  -  -  $  -  +  -  
++  -  -  +  -  +  $  +  +  -  $  -  $  +  +  -  +  +  +  +  $  $  -  
++  -  -  +  -  $  +  $  $  -  +  -  -  +  +  -  $  -  +  -  -  -  -  
+$  $  $  -  $  +  +  $  +  $  -  +  -  -  $  $  +  +  -  -  -  +  $  
++  +  $  +  T  +  +  -  -  $  $  +  +  +  -  -  -  -  +  $  +  -  -  
+-  $  -  +  +  +  +  -  $  -  -  +  $  -  -  +  +  $  -  -  $  -  -  
+$  +  $  -  +  -  -  -  -  -  -  -  -  $  +  +  -  -  -  -  -  +  $  
+$  -  $  -  -  -  +  -  +  -  -  -  +  +  -  -  -  +  +  +  -  -  $  
+$  -  $  +  -  +  $  $  +  +  +  $  -  -  -  -  -  $  -  -  -  +  +  
+$  -  +  -  -  $  -  +  $  -  -  +  -  $  -  [37m*  -  -  -  +  -  -  -  
+-  -  $  -  +  -  -  +  +  +  +  -  +  +  -  $  -  +  +  $  +  $  +  
++  +  +  $  $  -  +  -  $  +  -  +  -  -  $  +  -  $  +  +  +  -  $  
+$  -  $  -  $  +  +  -  +  +  -  +  +  -  $  -  -  -  -  $  +  +  -  
++  $  -  -  +  -  +  -  $  -  -  -  +  -  $  $  $  +  $  +  -  -  $  
+-  +  +  $  -  -  +  +  +  -  +  -  -  -  $  -  $  -  -  $  -  $  +  
+-  +  -  +  +  -  $  -  +  +  -  +  -  +  -  +  +  -  $  +  $  -  +  
+$  -  +  $  -  +  +  -  +  +  -  -  $  +  $  $  $  -  +  -  -  +  $  
+-  -  -  -  +  -  $  -  -  +  $  -  +  +  $  +  -  -  +  -  +  +  +  
+$  $  +  -  +  -  $  +  +  +  -  -  $  -  +  $  -  -  -  -  -  +  $  
++  $  -  -  -  -  $  +  +  -  +  -  +  +  +  -  $  +  $  -  -  +  -  
++  +  -  -  -  $  -  $  +  +  -  -  $  -  $  +  -  $  -  +  $  -  -  
+-  $  $  $  $  +  $  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  
++  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  +  
+Bang to the power of 111! Your next bomb's radius is now 2147483647
+Round Score: 150.31
+Total Score: 191.58
+
+Lives Left: 2
+
+Game Over!
+bomberman	191.58	33.00
+How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.
+3
+Top 3 Scores:
+  1. bomberman	191.58	33.00
+  2. rupert	157.02	8.00
+  3. bomberman	89.08	65.00
+Thank you for playing bomberman!
+]0;rupertraphael.amodia@csa2:~/cpsc-355/project1[rupertraphael.amodia@csa2 project1]$ ./mygame bomberman 25 23exit[K./mygame bomberman 20 23[12Pvim mygame.c[7Pcleargit pushcommit -m 'Fix storing of name in array.'add mygame.c[K[6Pstatusadd mygame.ccommit -m 'Fix storing of name in array.'push[K[3Pclearvim mygame.c./mygame bomberman 20 23[K[K[K[K[Ka [K[Kx y
+Sorry, invalid input.
+Please run program with string, integer, and integer arguments]0;rupertraphael.amodia@csa2:~/cpsc-355/project1[rupertraphael.amodia@csa2 project1]$ ./mygame bomberman x y[K[K[K1 1
+Sorry, invalid board size. A board must be at least 10 x 10 in size.
+]0;rupertraphael.amodia@csa2:~/cpsc-355/project1[rupertraphael.amodia@csa2 project1]$ ./mygame bomberman 1 1[K[K[K15 15
+How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.
+2 3 5
+Top 5 Scores:
+  1. bomberman	191.58	33.00
+  2. rupert	157.02	8.00
+  3. bomberman	89.08	65.00
+  4. rupert	0.00	12.00
+  5. rupert	0.00	13.00
+
+Hit Enter to continue...
+
+landmine: 96
+
+Number of powerups: 46/225 (20.44)
+Number of negatives: 85/225 (37.78)
+12.59     -2.51     -10.49    $         -13.79    13.71     $         6.59      -7.91     $         -13.36    12.74     -10.32    -14.75    1.61      
+$         $         14.88     $         14.91     11.01     -2.80     8.26      0.00      -3.19     $         $         $         $         -10.10    
+2.85      -0.33     -2.03     7.92      -2.25     14.77     $         4.77      9.73      4.98      11.21     8.37      -2.38     -5.68     8.11      
+-13.61    -7.74     14.43     $         3.10      2.46      -2.03     10.97     $         0.41      7.64      9.30      -13.00    $         12.45     
+-1.09     13.58     12.43     -4.23     13.62     $         13.99     $         6.04      $         $         $         -8.19     7.57      -1.53     
+$         14.25     4.49      1.66      -9.62     8.47      10.18     -11.04    -11.17    9.02      2.44      $         $         $         -0.26     
+-11.71    -12.67    1.71      $         13.32     1.98      L         1.37      $         $         -9.12     $         -7.47     $         -13.37    
+5.25      $         0.55      -4.69     0.65      -8.72     -12.56    -12.19    -13.85    1.65      $         -10.27    10.03     $         -11.16    
+T         -3.99     -6.07     -10.27    $         -1.12     -14.50    8.74      $         -10.79    -7.43     9.24      13.77     5.74      -9.89     
+7.24      -2.13     9.75      14.07     0.71      $         13.90     $         -7.79     $         0.71      -9.31     -12.76    -13.19    -8.15     
+6.76      -13.70    $         1.46      -13.50    -0.37     $         -6.62     $         11.95     -7.87     -0.96     $         -7.98     -2.53     
+4.90      $         2.96      -5.08     $         6.40      $         4.89      $         -2.27     -4.06     -2.19     -3.91     7.32      11.02     
+-7.72     7.14      -2.30     12.34     $         13.16     -1.68     -7.28     8.00      -14.71    $         10.20     9.02      -5.56     2.93      
+-14.26    1.74      -11.31    12.23     4.93      13.03     5.26      -11.72    11.12     12.41     -12.73    6.12      4.03      13.82     -4.55     
+3.96      7.65      9.22      -11.64    11.41     4.15      2.70      -1.57     -14.87    -9.47     2.26      6.67      -0.85     -7.82     -6.42     
+Landmine Position: 6,6
+Trigger Position: 8,0
+
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+You have 5 bombs left
+If you want to stop playing input "-1 -1".
+Drop the bomb at (x y): 0 0
+Bombing position: 0, 0...
+
++  -  X  X  X  X  X  X  X  X  X  X  X  X  X  
+$  $  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  
+Bang to the power of 2! Your next bomb's radius is now 4
+Round Score: 10.08
+Total Score: 10.08
+
+Lives Left: 3
+You have 4 bombs left
+If you want to stop playing input "-1 -1".
+Drop the bomb at (x y): -1 -1
+
+Game Over!
+bomberman	10.08	11.00
+How many top scores do you want to be displayed? If you don't want scores to be displayed, just enter 0.
+0
+Top 0 Scores:
+Thank you for playing bomberman!
+]0;rupertraphael.amodia@csa2:~/cpsc-355/project1[rupertraphael.amodia@csa2 project1]$ exit
+exit
+
+Script done on 2020-10-23 21:33:36-06:00
