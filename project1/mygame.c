@@ -159,14 +159,16 @@ void initializeGame(float *board, bool *covered, int numberOfRows, int numberOfC
 			if(*(board + row * numberOfColumns + column) == 70) {
 				landminePositionArray[0] = row;
 				landminePositionArray[1] = column;
-			}
 
-			if(*(board + row * numberOfColumns + column) == 71) {
+				printf("%s%-10s", KMAG, "L");
+			} else if(*(board + row * numberOfColumns + column) == 71) {
 				triggerPositionArray[0] = row;
 				triggerPositionArray[1] = column;
-			}
 
-			printf("%-7.2f", *(board + row * numberOfColumns + column));
+				printf("%s%-10s", KMAG, "T");
+			} else {
+				printf("%s%-10.2f", KNRM, *(board + row * numberOfColumns + column));
+			}
 		}
 		printf("\n");
 	}	
