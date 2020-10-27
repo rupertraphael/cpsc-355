@@ -41,7 +41,7 @@ loop:
 	// Generate multiplicand
 	mov	max_r,	15
 	bl	rand
-	mov	multiplicand_r,	x	
+	mov	multiplicand_r,	x0	
 	and	multiplicand_r,	multiplicand_r,	max_r // similar to multiplicand % 16	
 
 	mov	sum_r,		xzr 	// initialize sum as 0	

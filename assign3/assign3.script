@@ -1,0 +1,600 @@
+Script started on 2020-10-26 22:39:25-06:00
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign3[rupertraphael.amodia@csa2 assign3]$ ./assign3 
+
+-15 x 9 = -135
+
+-14 x 3 = -42
+
+-13 x 12 = -156
+
+-12 x 8 = -96
+
+-11 x 4 = -44
+
+-10 x 9 = -90
+
+-9 x 1 = -9
+
+-8 x 8 = -64
+
+-7 x 0 = 0
+
+-6 x 13 = -78
+
+-5 x 6 = -30
+
+-4 x 15 = -60
+
+-3 x 1 = -3
+
+-2 x 3 = -6
+
+-1 x 3 = -3
+
+0 x 10 = 0
+
+1 x 7 = 7
+
+2 x 10 = 20
+
+3 x 7 = 21
+
+4 x 2 = 8
+
+5 x 2 = 10
+
+6 x 12 = 72
+
+7 x 13 = 91
+
+8 x 12 = 96
+
+9 x 5 = 45
+
+10 x 2 = 20
+
+11 x 8 = 88
+
+12 x 7 = 84
+
+13 x 1 = 13
+
+14 x 13 = 182
+
+15 x 4 = 60
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign3[rupertraphael.amodia@csa2 assign3]$ gdb assign3
+GNU gdb (GDB) Fedora 8.1.1-4.fc28
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "aarch64-redhat-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from assign3...done.
+(gdb) l 
+1	// --------------------------------------------------------
+2	// Author: Rupert Raphael Amodia
+3	// Date: October 26, 2020
+4	// Description:	Multiply numbers -15 to 15 with randomly generated numbers 0-15
+5	// --------------------------------------------------------
+6	
+7		
+8		
+9				// nth least significant bit
+10				// number of bits.. 64 since we're using x registers
+(gdb) l
+11				// current bit position during the multiplication process
+12				// we shall use this as an op2 for bitwise and when calculating x20
+13				// multiplicand max value
+14				// stores result at bit position for bit multiplication
+15				// sum of all results will eventually equal to the product
+16				// max multiplier value
+17	
+18		.text
+19		theD: .string "\n%d x %d = %d\n" // string format to print when displaying the answer multiplier x mulitplicand = sum (product)
+20	
+(gdb) l
+21		.balign 4
+22		.global main
+23	
+24	
+25	main:
+26		stp	x29,	x30,	[sp, -16]!
+27		mov	x29,	sp
+28	
+29		// seed rand num generator
+30		mov	x0,	0
+(gdb) l
+31		bl	time
+32		bl	srand
+33	
+34	
+35		mov	x28,		15	// we end at 15
+36		mov	x27,	-15	// we start at -15	
+37	loop:
+38		cmp	x27,	x28 	// loop until multiplier = 15
+39		b.gt	end
+40	
+(gdb) l
+41		// Generate multiplicand
+42		mov	x24,	15
+43		bl	rand
+44		mov	x19,	x0	
+45		and	x19,	x19,	x24 // similar to multiplicand % 16	
+46	
+47		mov	x26,		xzr 	// initialize sum as 0	
+48		mov	x22,	xzr	// start at least significant/right most bit
+49		mov	x21,	64	// we're working with 64 bits
+50	
+(gdb) l
+51	
+52	multiply:		
+53		cmp	x22,	x21	// multiply until we get to bitpos 64 which doesn't exist anymore
+54		b.eq	answer
+55	
+56		mov	x23,	1
+57		// Get multiplicand LSB
+58		lsl	x23,	x23,	x22
+59		and	x20,		x19,	x23	// isolate the bit at bitpos since powof2 will have only 1 bit with a value of 1
+60		lsr	x20,		x20,		x22	// shift it to the right most pos
+(gdb) l
+61		
+62		cmp	x20,	xzr
+63		
+64		// result is just 0 or the value of multiplier
+65		// depending on whether the bit at bitpos is 0 or 1. 
+66		b.eq	times0
+67		b	times1
+68	
+69	aftertimes:
+70		lsl	x25,	x25,	x22	// algorithm says so; shift bits of result to the left one time
+(gdb) l
+71		add	x26,		x26,		x25	// add result to sum.. eventually should give the product when bitpos = 63
+72	
+73		add	x22,	x22,	1		// go to next bit position
+74	
+75		b	multiply					// do it again!
+76	
+77	times0:
+78		mov	x25,	xzr				// result is 0
+79		b	aftertimes
+80	
+(gdb) l
+81	times1:
+82		mov	x25,	x27			// result is the value of multiplier cuz multiplier * 1
+83		b	aftertimes
+84		
+85	// print answer
+86	answer:		
+87		ldr	x0,	=theD
+88		mov	x1,	x27
+89		mov	x2,	x19
+90		mov	x3,	x26	
+(gdb) l
+91		bl	printf
+92	
+93		add	x27,	x27,	1
+94		b	loop
+95	
+96	end:
+97		ldp	x29,	x30,	[sp], 16
+98		ret
+99	 
+(gdb) b loop
+Breakpoint 1 at 0x400694: file assign3.s, line 38.
+(gdb) b multiply
+Breakpoint 2 at 0x4006b8: file assign3.s, line 53.
+(gdb) b times0
+Breakpoint 3 at 0x4006ec: file assign3.s, line 78.
+(gdb) b times 1
+Function "times 1" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) bi[K[Kn
+(gdb) b times [K1
+Breakpoint 4 at 0x4006f4: file assign3.s, line 82.
+(gdb) b times aftertimes
+Function "times aftertimes" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) b [K[Kn
+(gdb) b after times
+Function "after times" not defined.
+Make breakpoint pending on future shared library load? (y or [n]) n
+(gdb) b aftertimes
+Breakpoint 5 at 0x4006dc: file assign3.s, line 70.
+(gdb) b answer
+Breakpoint 6 at 0x4006fc: file assign3.s, line 87.
+(gdb) b end
+Breakpoint 7 at 0x400718: file assign3.s, line 97.
+(gdb) r
+Starting program: /home/ugc/rupertraphael.amodia/cpsc-355/assign3/assign3 
+warning: the debug information found in "/usr/lib/debug//usr/lib64/ld-2.27.so.debug" does not match "/lib/ld-linux-aarch64.so.1" (CRC mismatch).
+
+Missing separate debuginfos, use: dnf debuginfo-install glibc-2.27-38.fc28.aarch64
+warning: the debug information found in "/usr/lib/debug//lib64/libc-2.27.so.debug" does not match "/lib64/libc.so.6" (CRC mismatch).
+
+warning: the debug information found in "/usr/lib/debug//usr/lib64/libc-2.27.so.debug" does not match "/lib64/libc.so.6" (CRC mismatch).
+
+
+Breakpoint 1, loop () at assign3.s:38
+38		cmp	x27,	x28 	// loop until multiplier = 15
+(gdb) i [K[Ki r x27
+x27            0xfffffffffffffff1	-15
+(gdb) i r x28
+x28            0xf	15
+(gdb) c
+Continuing.
+
+Breakpoint 2, multiply () at assign3.s:53
+53		cmp	x22,	x21	// multiply until we get to bitpos 64 which doesn't exist anymore
+(gdb) p [K[Kp/t x24
+No symbol "x24" in current context.
+(gdb) i r x24
+x24            0xf	15
+(gdb) c
+Continuing.
+
+Breakpoint 3, times0 () at assign3.s:78
+78		mov	x25,	xzr				// result is 0
+(gdb) i r
+x0             0x6e86070e	1854277390
+x1             0x0	0
+x2             0x6bd2c21ea0a21b00	7769485743967312640
+x3             0x0	0
+x4             0xffffbf6ab060	281473893183584
+x5             0xffffbf6ab06c	281473893183596
+x6             0xffffbf6ab0d8	281473893183704
+x7             0x11555380	290804608
+x8             0xffffffff	4294967295
+x9             0xffffbf6ab5b0	281473893184944
+x10            0x101010101010101	72340172838076673
+x11            0x8	8
+x12            0xffffbf6ab068	281473893183592
+x13            0x3e8000000	16777216000
+x14            0xffffbf53ede8	281473891692008
+x15            0x48d	1165
+x16            0xffffbf5712a0	281473891898016
+x17            0x420010	4325392
+x18            0x800	2048
+x19            0xe	14
+x20            0x0	0
+x21            0x40	64
+x22            0x0	0
+x23            0x1	1
+x24            0xf	15
+x25            0x0	0
+x26            0x0	0
+x27            0xfffffffffffffff1	-15
+x28            0xf	15
+---Type <return> to continue, or q <return> to quit---
+x29            0xffffffffefc0	281474976706496
+x30            0x4006a4	4196004
+sp             0xffffffffefc0	0xffffffffefc0
+pc             0x4006ec	0x4006ec <times0>
+cpsr           0x60000000	[ EL=0 C Z ]
+fpsr           0x0	0
+fpcr           0x0	0
+(gdb) p/t $x24
+$1 = 1111
+(gdb) p/t $x19
+$2 = 1110
+(gdb) t/[K[Kp/t  [K%x[K[K$x23
+$3 = 1
+(gdb) l
+73		add	x22,	x22,	1		// go to next bit position
+74	
+75		b	multiply					// do it again!
+76	
+77	times0:
+78		mov	x25,	xzr				// result is 0
+79		b	aftertimes
+80	
+81	times1:
+82		mov	x25,	x27			// result is the value of multiplier cuz multiplier * 1
+(gdb) n
+79		b	aftertimes
+(gdb) n
+
+Breakpoint 5, aftertimes () at assign3.s:70
+70		lsl	x25,	x25,	x22	// algorithm says so; shift bits of result to the left one time
+(gdb) p/t x[K$x25
+$4 = 0
+(gdb) n
+71		add	x26,		x26,		x25	// add result to sum.. eventually should give the product when bitpos = 63
+(gdb) np/t $x25
+$5 = 0
+(gdb) p[Kp $x26
+$6 = 0
+(gdb) n
+73		add	x22,	x22,	1		// go to next bit position
+(gdb) n[Kp $x26
+$7 = 0
+(gdb) n
+75		b	multiply					// do it again!
+(gdb) p x[K$x22
+$8 = 1
+(gdb) c
+Continuing.
+
+Breakpoint 2, multiply () at assign3.s:53
+53		cmp	x22,	x21	// multiply until we get to bitpos 64 which doesn't exist anymore
+(gdb) p $x22
+$9 = 1
+(gdb) p$x21
+Undefined command: "p$x21".  Try "help".
+(gdb) p$x21 $x21
+$10 = 64
+(gdb) c
+Continuing.
+
+Breakpoint 4, times1 () at assign3.s:82
+82		mov	x25,	x27			// result is the value of multiplier cuz multiplier * 1
+(gdb) i r
+x0             0x6e86070e	1854277390
+x1             0x0	0
+x2             0x6bd2c21ea0a21b00	7769485743967312640
+x3             0x0	0
+x4             0xffffbf6ab060	281473893183584
+x5             0xffffbf6ab06c	281473893183596
+x6             0xffffbf6ab0d8	281473893183704
+x7             0x11555380	290804608
+x8             0xffffffff	4294967295
+x9             0xffffbf6ab5b0	281473893184944
+x10            0x101010101010101	72340172838076673
+x11            0x8	8
+x12            0xffffbf6ab068	281473893183592
+x13            0x3e8000000	16777216000
+x14            0xffffbf53ede8	281473891692008
+x15            0x48d	1165
+x16            0xffffbf5712a0	281473891898016
+x17            0x420010	4325392
+x18            0x800	2048
+x19            0xe	14
+x20            0x1	1
+x21            0x40	64
+x22            0x1	1
+x23            0x2	2
+x24            0xf	15
+x25            0x0	0
+x26            0x0	0
+x27            0xfffffffffffffff1	-15
+x28            0xf	15
+---Type <return> to continue, or q <return> to quit---
+x29            0xffffffffefc0	281474976706496
+x30            0x4006a4	4196004
+sp             0xffffffffefc0	0xffffffffefc0
+pc             0x4006f4	0x4006f4 <times1>
+cpsr           0x20000000	[ EL=0 C ]
+fpsr           0x0	0
+fpcr           0x0	0
+(gdb) p/t x20
+No symbol "x20" in current context.
+(gdb) p/t x20$x20
+$11 = 1
+(gdb) p/t $x19
+$12 = 1110
+(gdb) p $x19
+$13 = 14
+(gdb) c
+Continuing.
+
+Breakpoint 5, aftertimes () at assign3.s:70
+70		lsl	x25,	x25,	x22	// algorithm says so; shift bits of result to the left one time
+(gdb) c
+Continuing.
+
+Breakpoint 2, multiply () at assign3.s:53
+53		cmp	x22,	x21	// multiply until we get to bitpos 64 which doesn't exist anymore
+(gdb) c
+Continuing.
+
+Breakpoint 4, times1 () at assign3.s:82
+82		mov	x25,	x27			// result is the value of multiplier cuz multiplier * 1
+(gdb) c
+Continuing.
+
+Breakpoint 5, aftertimes () at assign3.s:70
+70		lsl	x25,	x25,	x22	// algorithm says so; shift bits of result to the left one time
+(gdb) c
+Continuing.
+
+Breakpoint 2, multiply () at assign3.s:53
+53		cmp	x22,	x21	// multiply until we get to bitpos 64 which doesn't exist anymore
+(gdb) p $19
+History has not yet reached $19.
+(gdb) p x[K$x19
+$14 = 14
+(gdb) p x[K$x27
+$15 = -15
+(gdb) p $x26
+$16 = -90
+(gdb) c
+Continuing.
+
+Breakpoint 4, times1 () at assign3.s:82
+82		mov	x25,	x27			// result is the value of multiplier cuz multiplier * 1
+(gdb) c
+Continuing.
+
+Breakpoint 5, aftertimes () at assign3.s:70
+70		lsl	x25,	x25,	x22	// algorithm says so; shift bits of result to the left one time
+(gdb) n
+71		add	x26,		x26,		x25	// add result to sum.. eventually should give the product when bitpos = 63
+(gdb) n
+73		add	x22,	x22,	1		// go to next bit position
+(gdb) n
+75		b	multiply					// do it again!
+(gdb) n
+
+Breakpoint 2, multiply () at assign3.s:53
+53		cmp	x22,	x21	// multiply until we get to bitpos 64 which doesn't exist anymore
+(gdb) c
+Continuing.
+
+Breakpoint 3, times0 () at assign3.s:78
+78		mov	x25,	xzr				// result is 0
+(gdb) c
+Continuing.
+
+Breakpoint 5, aftertimes () at assign3.s:70
+70		lsl	x25,	x25,	x22	// algorithm says so; shift bits of result to the left one time
+(gdb) ifno b[K[K[K[K[Knfo break
+Num     Type           Disp Enb Address            What
+1       breakpoint     keep y   0x0000000000400694 assign3.s:38
+	breakpoint already hit 1 time
+2       breakpoint     keep y   0x00000000004006b8 assign3.s:53
+	breakpoint already hit 5 times
+3       breakpoint     keep y   0x00000000004006ec assign3.s:78
+	breakpoint already hit 2 times
+4       breakpoint     keep y   0x00000000004006f4 assign3.s:82
+	breakpoint already hit 3 times
+5       breakpoint     keep y   0x00000000004006dc assign3.s:70
+	breakpoint already hit 5 times
+6       breakpoint     keep y   0x00000000004006fc assign3.s:87
+7       breakpoint     keep y   0x0000000000400718 assign3.s:97
+(gdb) clea
+Deleted breakpoint 5 
+(gdb) clear[K[K[K[K[Kclear
+No breakpoint at this line.
+(gdb) clear 1
+No breakpoint at 1.
+(gdb) cl[K[Kclear 38
+Deleted breakpoint 1 
+(gdb) clear 6[K53
+Deleted breakpoint 2 
+(gdb) clear 78
+Deleted breakpoint 3 
+(gdb) clear 82
+Deleted breakpoint 4 
+(gdb) clear 70
+No breakpoint at 70.
+(gdb) cea[K[Klear 87
+Deleted breakpoint 6 
+(gdb) clear 97
+Deleted breakpoint 7 
+(gdb) l
+65		// depending on whether the bit at bitpos is 0 or 1. 
+66		b.eq	times0
+67		b	times1
+68	
+69	aftertimes:
+70		lsl	x25,	x25,	x22	// algorithm says so; shift bits of result to the left one time
+71		add	x26,		x26,		x25	// add result to sum.. eventually should give the product when bitpos = 63
+72	
+73		add	x22,	x22,	1		// go to next bit position
+74	
+(gdb) l
+75		b	multiply					// do it again!
+76	
+77	times0:
+78		mov	x25,	xzr				// result is 0
+79		b	aftertimes
+80	
+81	times1:
+82		mov	x25,	x27			// result is the value of multiplier cuz multiplier * 1
+83		b	aftertimes
+84		
+(gdb) l
+85	// print answer
+86	answer:		
+87		ldr	x0,	=theD
+88		mov	x1,	x27
+89		mov	x2,	x19
+90		mov	x3,	x26	
+91		bl	printf
+92	
+93		add	x27,	x27,	1
+94		b	loop
+(gdb) b ns[K[Kanswer
+Breakpoint 8 at 0x4006fc: file assign3.s, line 87.
+(gdb) c
+Continuing.
+
+Breakpoint 8, answer () at assign3.s:87
+87		ldr	x0,	=theD
+(gdb) p $x35[K[K19
+$17 = 14
+(gdb) p $x27
+$18 = -15
+(gdb) p $x26
+$19 = -210
+(gdb) info break
+Num     Type           Disp Enb Address            What
+8       breakpoint     keep y   0x00000000004006fc assign3.s:87
+	breakpoint already hit 1 time
+(gdb) clear 87
+Deleted breakpoint 8 
+(gdb) c
+Continuing.
+
+-15 x 14 = -210
+
+-14 x 9 = -126
+
+-13 x 12 = -156
+
+-12 x 12 = -144
+
+-11 x 12 = -132
+
+-10 x 14 = -140
+
+-9 x 12 = -108
+
+-8 x 13 = -104
+
+-7 x 8 = -56
+
+-6 x 12 = -72
+
+-5 x 0 = 0
+
+-4 x 14 = -56
+
+-3 x 6 = -18
+
+-2 x 1 = -2
+
+-1 x 4 = -4
+
+0 x 0 = 0
+
+1 x 6 = 6
+
+2 x 11 = 22
+
+3 x 11 = 33
+
+4 x 5 = 20
+
+5 x 1 = 5
+
+6 x 3 = 18
+
+7 x 6 = 42
+
+8 x 10 = 80
+
+9 x 11 = 99
+
+10 x 9 = 90
+
+11 x 3 = 33
+
+12 x 1 = 12
+
+13 x 9 = 117
+
+14 x 3 = 42
+
+15 x 1 = 15
+[Inferior 1 (process 7391) exited with code 015]
+(gdb) q
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign3[rupertraphael.amodia@csa2 assign3]$ e[Kexit
+exit
+
+Script done on 2020-10-26 22:56:06-06:00
