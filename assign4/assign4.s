@@ -45,46 +45,69 @@ main:	stp	x29,	x30,	[sp, -16]!
 
 	// Calculate required space for table
 	// number of bytes allocated for table = 4 * m * n
-	mul	x22,		x19,		x20
+	mul	x22,		x19,		x20	
 	sub	x21,		xzr,		x22
 	lsl	x21,		x21,	4
 	and	x21,		x21,	ALIGN
 	add	sp,	sp,	x21
+
+	// Calculate required space for struct
+	// number of bytes for struct = 
 
 	add	x0,	x29,	table_s
 	mov	x1,	x19
 	mov	x2,	x20
 	bl	generateTable
 
-	mov	x23,		xzr
-	mov	x24,	table_s
-	mov	x28,		xzr
-	mov	x27,		xzr
-print:
-	mov	x1, 	xzr
+	mov	x23,		xzr		// start at cell 0
+	mov	x24,	table_s		// offset for x29 - start at table base address
+	mov	x28,		xzr		// start column at 0
+	mov	x27,		xzr		// start row at 0
+	mov	x22,	xzr		// max occurence is set to 0
 
-	ldr	x0,	=theD
-	ldr	x1,	[x29, x24]
+print:
+	ldr	x25,	[x29, x24]		// load table cell value at offset
+
+	// print occurence at current table cell
+	ldr	x0,	=theD			// load string format and use as argument for printing
+	mov	x1,	x25		// use loaded table cell value as argument for printing
 	bl	printf
 
-	sub     x24,       x24,       TABLE_ELEMENT_SIZE
+	sub     x24,       x24,       TABLE_ELEMENT_SIZE	// decrement offset by table element size
 
-	add	x28,		x28,		1
+	// if table cell value is greater than
+	// currently stored max occurence,
+	// set it as the max occurence 
+	cmp	x25,	x22
+	b.le	inc_col				// otherwise, skip
+	mov	x22,	x25	// set new max occurence
 
-	// loop if still in the same row
-        cmp     x28,         x20
-        b.lt    print
+inc_col:
+	add	x28,		x28,		1			// increment column number to keep track of current table cell column
 
-	// otherwise, reset column, go to new row
+        cmp     x28,         x20					// if column < number of columns:
+        b.lt    print							// loop
+
+	// otherwise, reset column to 0, go to new row
 	ldr	x0,	=linebreak
 	bl	printf
-	mov	x28,	xzr	
+	mov	x28,	xzr
 	
-	add 	x27,		x27,		1
-	cmp	x27,		x19	
-	b.lt	print
+	ldr	x0,	=theD			// load string format and use as argument for printing
+	mov	x1,	x22		// use loaded table cell value as argument for printing
+	bl	printf
+	mov	x22,	xzr		// new row, so set max occurence back to zero
 
-	
+	ldr	x0,	=linebreak
+	bl	printf
+
+	add 	x27,		x27,		1			// increment row number to keep track of current table cell row
+	cmp	x27,		x19					// if row < number of rows:
+	b.lt	print							// loop
+
+	// At this point column = number of columns and row = number of rows
+	// this row and column does not exist in the table so the printing loop
+	// has been completely executed. 	
 
 	// Deallocate space used by table
 	sub	sp,	sp,	x21

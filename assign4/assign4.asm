@@ -20,7 +20,7 @@ define(table_base_r, x26)	// base address of table
 define(row_r, x27)		// current row
 define(col_r, x28)		// current column
 
-define(maxocc_r)		// maximum occurence
+define(maxocc_r, x22)		// maximum occurence
 
 TABLE_ELEMENT_SIZE = 8
 table_s = -16
@@ -45,46 +45,69 @@ main:	stp	x29,	x30,	[sp, -16]!
 
 	// Calculate required space for table
 	// number of bytes allocated for table = 4 * m * n
-	mul	count_cells_r,		m_r,		n_r
+	mul	count_cells_r,		m_r,		n_r	
 	sub	table_alloc_r,		xzr,		count_cells_r
 	lsl	table_alloc_r,		table_alloc_r,	4
 	and	table_alloc_r,		table_alloc_r,	ALIGN
 	add	sp,	sp,	table_alloc_r
+
+	// Calculate required space for struct
+	// number of bytes for struct = 
 
 	add	x0,	x29,	table_s
 	mov	x1,	m_r
 	mov	x2,	n_r
 	bl	generateTable
 
-	mov	cell_r,		xzr
-	mov	offset_r,	table_s
-	mov	col_r,		xzr
-	mov	row_r,		xzr
-print:
-	mov	x1, 	xzr
+	mov	cell_r,		xzr		// start at cell 0
+	mov	offset_r,	table_s		// offset for x29 - start at table base address
+	mov	col_r,		xzr		// start column at 0
+	mov	row_r,		xzr		// start row at 0
+	mov	maxocc_r,	xzr		// max occurence is set to 0
 
-	ldr	x0,	=theD
-	ldr	x1,	[x29, offset_r]
+print:
+	ldr	randNum_r,	[x29, offset_r]		// load table cell value at offset
+
+	// print occurence at current table cell
+	ldr	x0,	=theD			// load string format and use as argument for printing
+	mov	x1,	randNum_r		// use loaded table cell value as argument for printing
 	bl	printf
 
-	sub     offset_r,       offset_r,       TABLE_ELEMENT_SIZE
+	sub     offset_r,       offset_r,       TABLE_ELEMENT_SIZE	// decrement offset by table element size
 
-	add	col_r,		col_r,		1
+	// if table cell value is greater than
+	// currently stored max occurence,
+	// set it as the max occurence 
+	cmp	randNum_r,	maxocc_r
+	b.le	inc_col				// otherwise, skip
+	mov	maxocc_r,	randNum_r	// set new max occurence
 
-	// loop if still in the same row
-        cmp     col_r,         n_r
-        b.lt    print
+inc_col:
+	add	col_r,		col_r,		1			// increment column number to keep track of current table cell column
 
-	// otherwise, reset column, go to new row
+        cmp     col_r,         n_r					// if column < number of columns:
+        b.lt    print							// loop
+
+	// otherwise, reset column to 0, go to new row
 	ldr	x0,	=linebreak
 	bl	printf
-	mov	col_r,	xzr	
+	mov	col_r,	xzr
 	
-	add 	row_r,		row_r,		1
-	cmp	row_r,		m_r	
-	b.lt	print
+	//
+	// store max frequency for document to struct
 
-	
+	mov	maxocc_r,	xzr		// new row, so set max occurence back to zero
+
+	ldr	x0,	=linebreak
+	bl	printf
+
+	add 	row_r,		row_r,		1			// increment row number to keep track of current table cell row
+	cmp	row_r,		m_r					// if row < number of rows:
+	b.lt	print							// loop
+
+	// At this point column = number of columns and row = number of rows
+	// this row and column does not exist in the table so the printing loop
+	// has been completely executed. 	
 
 	// Deallocate space used by table
 	sub	sp,	sp,	table_alloc_r
