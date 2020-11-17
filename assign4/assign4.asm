@@ -17,7 +17,8 @@ define(cell_r, x23)		// current cell
 define(offset_r, x24)		// offset to get a cell address
 define(randNum_r, x25)		// generated random number
 
-TABLE_ELEMENT_SIZE = -8
+TABLE_ELEMENT_SIZE = 8
+table_s = -16
 ALIGN = -16
 MAX_RAND = 16 - 1
 
@@ -46,7 +47,7 @@ main:	stp	x29,	x30,	[sp, -16]!
 	add	sp,	sp,	table_alloc_r
 
 	mov	cell_r,		xzr
-	mov	offset_r,	-8
+	mov	offset_r,	table_s
 store:
 	// Store random numbers in each table cell
 	// First, we generate the random number
@@ -58,7 +59,7 @@ store:
 
 	str	randNum_r,	[x29, offset_r]
 
-	add	offset_r,	offset_r,	TABLE_ELEMENT_SIZE
+	sub	offset_r,	offset_r,	TABLE_ELEMENT_SIZE
 	add	cell_r,		cell_r,		1
 
 	// Loop until current cell number = number of cells
@@ -66,13 +67,13 @@ store:
 	b.lt	store
 	
 	mov	cell_r,		xzr
-	mov	offset_r,	TABLE_ELEMENT_SIZE
+	mov	offset_r,	table_s
 print:
 	ldr	x0,	=theD
 	ldr	x1,	[x29, offset_r]
 	bl	printf
 
-	add     offset_r,       offset_r,       TABLE_ELEMENT_SIZE
+	sub     offset_r,       offset_r,       TABLE_ELEMENT_SIZE
         add     cell_r,         cell_r,         1
 
 

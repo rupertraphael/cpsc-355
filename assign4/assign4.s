@@ -15,10 +15,10 @@
 	// number of cells n*m
 		// current cell
 		// offset to get a cell address
-
 		// generated random number
 
-TABLE_ELEMENT_SIZE = -8
+TABLE_ELEMENT_SIZE = 8
+table_s = -16
 ALIGN = -16
 MAX_RAND = 16 - 1
 
@@ -47,7 +47,7 @@ main:	stp	x29,	x30,	[sp, -16]!
 	add	sp,	sp,	x21
 
 	mov	x23,		xzr
-	mov	x24,	-8
+	mov	x24,	table_s
 store:
 	// Store random numbers in each table cell
 	// First, we generate the random number
@@ -59,28 +59,21 @@ store:
 
 	str	x25,	[x29, x24]
 
-	ldr	x0,	=theD
-	ldr	x1,	[x29, x24]
-	bl	printf
-
-	add	x24,	x24,	TABLE_ELEMENT_SIZE
+	sub	x24,	x24,	TABLE_ELEMENT_SIZE
 	add	x23,		x23,		1
 
 	// Loop until current cell number = number of cells
 	cmp	x23,		x22		
 	b.lt	store
 	
-	ldr	x0,	=linebreak
-	bl	printf
-
 	mov	x23,		xzr
-	mov	x24,	TABLE_ELEMENT_SIZE
+	mov	x24,	table_s
 print:
 	ldr	x0,	=theD
 	ldr	x1,	[x29, x24]
 	bl	printf
 
-	add     x24,       x24,       TABLE_ELEMENT_SIZE
+	sub     x24,       x24,       TABLE_ELEMENT_SIZE
         add     x23,         x23,         1
 
 
