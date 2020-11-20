@@ -5,10 +5,11 @@
 // --------------------------------------------------------
 
 	.text
-	theD: .string "%-6d"
-	struct:	.string "document %d - highest frequency: %d (word %d)"
-	error:	.string "Invalid arguments.\n"
-	linebreak: .string "\n"	
+	theD: 		.string "%-6d"
+	header: 	.string	"Document\tHighest Frequency\tWord\tOccurence"
+	struct:		.string "%5d\t%25d\t%4d\t%9d"
+	error:		.string "Invalid arguments.\n"
+	linebreak: 	.string "\n"	
 
 				// Eventually, registers for:
 define(m_r, x19)		// number of rows/documents
@@ -133,14 +134,26 @@ inc_col:
 	// this row and column does not exist in the table so the printing loop
 	// has been completely executed. 	
 
+	ldr	x0,	=linebreak
+	bl	printf
+
+	ldr	x0,	=header
+	bl	printf
+
 	mov	row_r,		xzr			// start at row 0
 printStruct:
 	ldr	x0,	=linebreak
 	bl	printf
 
 	lsl	offset_r,	row_r,	4
-	sub	offset_r,	table_alloc_r, offset_r			// offset for max word = table_alloc_r - (row * 2) * 8 
-	ldr	x3,	[x29, offset_r]
+	sub	offset_r,	table_alloc_r, offset_r	// offset for max word = table_alloc_r - (row * 2) * 8 
+	ldr	x3,		[x29, offset_r]		// load max word
+	
+	mul	offset_r,	row_r,		n_r		// offset = row * numcols
+	add	offset_r,	offset_r,	x3		// offset = (offset + maxword) * 8 where maxword is a col index		
+	lsl	offset_r,	offset_r,	3
+	sub	offset_r,	xzr,		offset_r
+	ldr 	x4,		[x29, offset_r]	
 
 	lsl	offset_r,	row_r,	1
 	add	offset_r,	offset_r,	1	// offset for max freq = table_alloc_r - (row * 2 + 1) * 8
@@ -252,6 +265,7 @@ loop:
 	mov	randNum_r,	x0
 
 	and	randNum_r,	randNum_r,	MAX_RAND	// limit number from 0 - MAX_RAND		
+	add	randNum_r,	randNum_r,	1		// number is now 1 - MAX_RAND + 1 (i.e. 1-16)
 
 	str	randNum_r,	[table_base_r, offset_r]	// store number in array
 
