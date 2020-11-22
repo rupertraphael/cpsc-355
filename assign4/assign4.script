@@ -1,0 +1,389 @@
+Script started on 2020-11-22 13:31:24-07:00
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ a[K./assign  [K[K4 0 0
+Invalid arguments.
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ ./assign4 0 0[K[K[K-1 -1[K[K4
+Invalid arguments.
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ ./assign4 -1 4[K[K[K[K17 17[K[K16[K[K5
+Invalid arguments.
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ ./assign4 17 5[K[K[K[K15 15[K[K[K[K[K4 4
+3     2     8     8     
+9     6     10    6     
+13    5     7     7     
+1     7     8     8     
+
+Document	Highest Frequency	Word	Occurence
+    0	                       38	   2	        8
+    1	                       32	   2	       10
+    2	                       40	   0	       13
+    3	                       33	   2	        8
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ ./assign4 4 4[K[K[K16 16
+6     16    3     12    7     10    13    12    7     7     11    15    12    2     7     10    
+5     12    5     15    5     4     7     8     4     14    15    8     8     4     11    13    
+3     13    9     9     6     5     4     13    11    15    11    6     16    1     15    4     
+12    4     2     16    7     8     8     11    6     6     2     13    10    13    10    12    
+9     2     5     15    6     8     11    16    6     5     5     5     6     4     9     1     
+7     10    1     13    2     8     7     7     13    9     3     6     5     12    2     13    
+13    6     11    2     13    5     1     3     10    6     7     15    9     15    15    15    
+9     15    11    10    6     2     16    3     10    2     8     14    14    9     10    10    
+14    5     12    11    9     12    13    2     1     3     16    9     2     15    7     10    
+13    2     3     3     3     2     5     12    3     12    9     16    5     2     10    2     
+6     5     12    15    16    8     16    1     11    16    9     12    14    16    5     10    
+1     7     12    3     8     16    14    10    12    6     10    16    7     3     1     13    
+7     13    11    6     4     10    6     14    9     15    9     6     14    13    16    14    
+3     11    16    10    11    13    4     6     2     13    5     8     15    5     4     5     
+1     14    10    5     8     16    2     16    14    11    6     11    7     5     8     10    
+15    7     3     9     3     6     14    4     2     2     11    16    7     15    4     7     
+
+Document	Highest Frequency	Word	Occurence
+    0	                       10	   1	       16
+    1	                       10	   3	       15
+    2	                       11	  12	       16
+    3	                       11	   3	       16
+    4	                       14	   7	       16
+    5	                       11	   3	       13
+    6	                       10	  11	       15
+    7	                       10	   6	       16
+    8	                       11	  10	       16
+    9	                       15	  11	       16
+   10	                        9	   4	       16
+   11	                       11	   5	       16
+   12	                        9	  14	       16
+   13	                       12	   2	       16
+   14	                       11	   5	       16
+   15	                       12	  11	       16
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ ./assign4 16 16[K[K[K[K[K5 16[K[K[K[K10 13
+11    10    13    7     6     16    12    9     8     3     12    3     8     
+7     11    6     14    6     4     12    16    9     4     4     7     10    
+7     4     8     16    5     2     10    1     8     15    16    3     7     
+7     6     2     10    13    8     4     3     5     9     6     16    8     
+14    3     12    5     12    2     8     3     2     12    4     11    12    
+11    9     11    14    15    2     3     16    11    15    7     14    1     
+11    7     6     10    14    4     12    9     8     7     11    15    10    
+12    10    13    6     5     8     14    15    5     12    16    7     11    
+10    5     1     8     6     11    14    11    4     11    14    15    4     
+5     5     14    3     14    9     12    11    14    16    2     11    15    
+
+Document	Highest Frequency	Word	Occurence
+    0	                       13	   5	       16
+    1	                       14	   7	       16
+    2	                       15	   3	       16
+    3	                       16	  11	       16
+    4	                       14	   0	       14
+    5	                       12	   7	       16
+    6	                       12	  11	       15
+    7	                       11	  10	       16
+    8	                       13	  11	       15
+    9	                       12	   9	       16
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ gdb assign4
+GNU gdb (GDB) Fedora 8.1.1-4.fc28
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "aarch64-redhat-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from assign4...done.
+(gdb) set args 4 4
+(gdb) l generate [KTable
+219	
+220	
+221	// generateTable(&table, numrows, numcols)
+222	// populates random occurences (0 - 15) into the given table
+223	generateTable:
+224		stp	x29,	x30,	[sp, alloc]!
+225		mov	x29,	sp
+226	
+227		str	x19,	[x29, x19_s]
+228		str	x20,	[x29, x20_s]
+(gdb) l
+229		str	x21,	[x29, x21_s]
+230		str	x22,	[x29, x22_s]
+231		str	x23,	[x29, x23_s]
+232		str	x24,	[x29, x24_s]
+233		str	x25,	[x29, x25_s]
+234		str	x26,	[x29, x26_s]
+235		str	x27,	[x29, x27_s]
+236		str	x28,	[x29, x28_s]
+237			// store caller-saved register values
+238	
+(gdb) l
+239		mov	x26,	x0	// get table base address from given arguments	
+240	
+241		mul	x22,		x1,	x2	 // calculate number of cells the table has
+242		
+243		mov	x24,	xzr		// start offset for table base address at 0
+244		mov	x23,		xzr		// start at cell 0 
+245	loop:
+246		// Store random numbers in each table cell
+247		// First, we generate the random number
+248		bl	rand				// Generate random number
+(gdb) l
+249		mov	x25,	x0
+250	
+251		and	x25,	x25,	MAX_RAND	// limit number from 0 - MAX_RAND		
+252		add	x25,	x25,	1		// number is now 1 - MAX_RAND + 1 (i.e. 1-16)
+253	
+254		str	x25,	[x26, x24]	// store number in array
+255	
+256		sub	x24,	x24,	TABLE_ELEMENT_SIZE	// keep track of offset for where to store number in stack
+257		add	x23,		x23,		1		// keep track of cell number
+258	
+(gdb) b 256
+Breakpoint 1 at 0x4008e4: file assign4.s, line 256.
+(gdb) b 256l[K generateTable[C[C[C[C[C[C[3Pset args 4 4[K[K[K[K[K[K[K[K[K[K[K[Kx/dg[K[K16dg $x29 - 120
+No registers.
+(gdb) b [K[Kl main
+37	MAX_RAND = 16 - 1
+38	
+39		.balign 4
+40		.global main
+41	
+42	main:	stp	x29,	x30,	[sp, -16]!
+43		mov	x29,	sp
+44	
+45		mov	x9,	3	// exact number of args
+46		cmp	x0,	x9	// if not equal,
+(gdb) l
+47		b.ne	invalidargs	// prompt invalid args and exit
+48	
+49		ldr	x0, [x1, 8]	// load second argument to x0
+50		ldr	x20, [x1, 16]	// load third argument into register for number of columns
+51		bl	atoi		// convert second argument into int
+52		mov	x19,	x0	// second argument is number of rows
+53	
+54		
+55		mov	x0,	x20	// set third command line arg as first argument for atoi
+56		bl 	atoi		// convert to int
+(gdb) l
+57		mov	x20,	x0	// third command line argument is number of columns
+58	
+59		mov	x9,	4	// minimum number of rows/columns
+60		mov	x10,	16	// maximum number of rows/columns
+61		cmp	x19,	x9	// if less than minimum number of rows,
+62		b.lt	invalidargs	// prompt invalid args and exit
+63		cmp	x19,	x10	// if more than max number of rows,
+64		b.gt	invalidargs	// prompt invalid args and exit
+65		cmp	x20,	x9	// if less than min number of cols
+66		b.lt	invalidargs     // prompt invalid args and exit
+(gdb) l
+67		cmp	x20,	x10     // if more than max number of rows
+68		b.gt	invalidargs     // prompt invalid args and exit
+69	
+70		// Seed rand
+71		mov	x0,	0
+72		bl	time
+73		bl	srand
+74	
+75	
+76		// Calculate required space for table
+(gdb) b 69
+Breakpoint 2 at 0x400768: file assign4.s, line 69.
+(gdb) l
+77		// number of bytes allocated for table = 8 * m * n
+78		mul	x22,		x19,		x20		// number of rows * number of columns	
+79		sub	x21,		xzr,		x22	// negate x21
+80		lsl	x21,		x21,	3		// multiply by 8
+81		and	x21,		x21,	-16		// make sure x21 is divisible by 16
+82	
+83		// Calculate required space for struct
+84		// number of bytes for struct = m * (8 + 8) = m * 2 * 8 = m * 16 
+85		lsl	x26,		x19,	4			// number of rows * 16	
+86		sub	x26,		xzr,	x26		// make struct_alloc negative
+(gdb) l
+87		and	x26,		x26,	-16		// make sure allocation is divisible by 16
+88	
+89		add	sp,	sp,	x21			// allocate space for table
+90		add	sp,	sp,	x26			// allocate space for struct
+91	
+92		add	x0,	x29,	table_s				// first arg is table's base address	
+93		mov	x1,	x19					// second arg is number of rows
+94		mov	x2,	x20					// third arg is number of cols
+95		bl	generateTable
+96	
+(gdb) b 91
+Breakpoint 3 at 0x400798: file assign4.s, line 91.
+(gdb) l
+97		add	x0,	x29,	table_s				// set first arg as table's base address
+98		mov	x1,	x19					// second arg is number of rows
+99		mov	x2,	x20					// third arg is number of cols
+100		add	x3,	x0,	x21			// last arg is struct's base address (struct is right after table)
+101		bl	generateStruct
+102	
+103		mov	x23,		xzr		// start at cell 0
+104		mov	x24,	table_s		// offset for x29 - start at table base address
+105		mov	x28,		xzr		// start column at 0
+106		mov	x27,		xzr		// start row at 0
+(gdb) b 102
+Breakpoint 4 at 0x4007bc: file assign4.s, line 102.
+(gdb) r
+Starting program: /home/ugc/rupertraphael.amodia/cpsc-355/assign4/assign4 4 4
+warning: the debug information found in "/usr/lib/debug//usr/lib64/ld-2.27.so.debug" does not match "/lib/ld-linux-aarch64.so.1" (CRC mismatch).
+
+Missing separate debuginfos, use: dnf debuginfo-install glibc-2.27-38.fc28.aarch64
+warning: the debug information found in "/usr/lib/debug//lib64/libc-2.27.so.debug" does not match "/lib64/libc.so.6" (CRC mismatch).
+
+warning: the debug information found in "/usr/lib/debug//usr/lib64/libc-2.27.so.debug" does not match "/lib64/libc.so.6" (CRC mismatch).
+
+
+Breakpoint 2, main () at assign4.s:71
+71		mov	x0,	0
+(gdb) p/d $x0
+$1 = 4
+(gdb) n
+72		bl	time
+(gdb) p/d $x1
+$2 = 4
+(gdb) n
+73		bl	srand
+(gdb) n
+78		mul	x22,		x19,		x20		// number of rows * number of columns	
+(gdb) b $x29[K[K[K[K[K[Kp/d $x29
+$3 = 281474976706464
+(gdb) p/d $x29[K[K19
+$4 = 4
+(gdb) p/d $x19[K[K20
+$5 = 4
+(gdb) p/d $x20[K[K22
+$6 = 0
+(gdb) n
+79		sub	x21,		xzr,		x22	// negate x21
+(gdb) np/d $x22
+$7 = 16
+(gdb) n
+80		lsl	x21,		x21,	3		// multiply by 8
+(gdb) n
+81		and	x21,		x21,	-16		// make sure x21 is divisible by 16
+(gdb) n
+85		lsl	x26,		x19,	4			// number of rows * 16	
+(gdb) p/d $x21
+$8 = -128
+(gdb) n
+86		sub	x26,		xzr,	x26		// make struct_alloc negative
+(gdb) n
+87		and	x26,		x26,	-16		// make sure allocation is divisible by 16
+(gdb) n
+89		add	sp,	sp,	x21			// allocate space for table
+(gdb) p/d $x26
+$9 = -64
+(gdb) p/d $sp
+$10 = 281474976706464
+(gdb) n
+main () at assign4.s:90
+90		add	sp,	sp,	x26			// allocate space for struct
+(gdb) np/d $sp
+$11 = 281474976706336
+(gdb) n
+
+Breakpoint 3, main () at assign4.s:92
+92		add	x0,	x29,	table_s				// first arg is table's base address	
+(gdb) np/d $sp
+$12 = 281474976706272
+(gdb) x/d [K[K16dg x2[K[K$x29 - 100[K[K20
+0xffffffffef28:	7002873594370421619	3747052538758263667
+0xffffffffef38:	5711513563797926912	9605333580251136
+0xffffffffef48:	9605333580251136	9007199254740992
+0xffffffffef58:	2097154	281474976706432
+0xffffffffef68:	281473891896336	8824446472150843392
+0xffffffffef78:	-2818082205135671040	281474976706464
+0xffffffffef88:	4196212	4
+0xffffffffef98:	4	281474976706480
+(gdb) c
+Continuing.
+
+Breakpoint 1, loop () at assign4.s:256
+256		sub	x24,	x24,	TABLE_ELEMENT_SIZE	// keep track of offset for where to store number in stack
+(gdb) cx/16dg $x29 - 120
+0xffffffffee08:	7002873594370421619	3747052538758263667
+0xffffffffee18:	5711513563797926912	9605333580251136
+0xffffffffee28:	9605333580251136	9007199254740992
+0xffffffffee38:	2097154	281474976706160
+0xffffffffee48:	281473891898028	4
+0xffffffffee58:	4	5587141435018184706
+0xffffffffee68:	-2818082205135671040	281474976706176
+0xffffffffee78:	4196564	281474976706464
+(gdb) x/16dg $x29 - 120[C[C[C[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kl
+251		and	x25,	x25,	MAX_RAND	// limit number from 0 - MAX_RAND		
+252		add	x25,	x25,	1		// number is now 1 - MAX_RAND + 1 (i.e. 1-16)
+253	
+254		str	x25,	[x26, x24]	// store number in array
+255	
+256		sub	x24,	x24,	TABLE_ELEMENT_SIZE	// keep track of offset for where to store number in stack
+257		add	x23,		x23,		1		// keep track of cell number
+258	
+259		// Loop until current cell number = number of cells
+260		cmp	x23,		x22		
+(gdb) p/d 4[K$x29[K5
+$13 = 9
+(gdb) c
+Continuing.
+
+Breakpoint 1, loop () at assign4.s:256
+256		sub	x24,	x24,	TABLE_ELEMENT_SIZE	// keep track of offset for where to store number in stack
+(gdb) p/d $x29[K5
+$14 = 14
+(gdb) clear
+Deleted breakpoint 1 
+(gdb) c
+Continuing.
+
+Breakpoint 4, main () at assign4.s:103
+103		mov	x23,		xzr		// start at cell 0
+(gdb) clearp/d $x25[C[C[C[C[C[Cc[Kp/d $x25[C[C[C[C[C[Cl[Kx/16dg $x29 - 120
+0xffffffffef28:	3	11
+0xffffffffef38:	13	9
+0xffffffffef48:	9	16
+0xffffffffef58:	11	6
+0xffffffffef68:	1	1
+0xffffffffef78:	2	12
+0xffffffffef88:	5	5
+0xffffffffef98:	14	9
+(gdb) c[Kx/16dg $x29 - 120[C[C[C[C[C[Cc[Kx/16dg $x29 - 120[1P[1P[1@2[1@4[C[C[C[C[C[C[C[C[C[C[C[C[C[K[K84
+0xffffffffeee8:	36	1
+0xffffffffeef8:	38	2
+0xffffffffef08:	75	0
+0xffffffffef18:	42	1
+0xffffffffef28:	3	11
+0xffffffffef38:	13	9
+0xffffffffef48:	9	16
+0xffffffffef58:	11	6
+0xffffffffef68:	1	1
+0xffffffffef78:	2	12
+0xffffffffef88:	5	5
+0xffffffffef98:	14	9
+(gdb) l
+98		mov	x1,	x19					// second arg is number of rows
+99		mov	x2,	x20					// third arg is number of cols
+100		add	x3,	x0,	x21			// last arg is struct's base address (struct is right after table)
+101		bl	generateStruct
+102	
+103		mov	x23,		xzr		// start at cell 0
+104		mov	x24,	table_s		// offset for x29 - start at table base address
+105		mov	x28,		xzr		// start column at 0
+106		mov	x27,		xzr		// start row at 0
+107	
+(gdb) c
+Continuing.
+9     14    5     5     
+12    2     1     1     
+6     11    16    9     
+9     13    11    3     
+
+Document	Highest Frequency	Word	Occurence
+    0	                       42	   1	       14
+    1	                       75	   0	       12
+    2	                       38	   2	       16
+    3	                       36	   1	       13
+[Inferior 1 (process 4878) exited with code 01]
+(gdb) q
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ clear
+[3J[H[2J]0;rupertraphael.amodia@csa2:~/cpsc-355/assign4[rupertraphael.amodia@csa2 assign4]$ exit
+exit
+
+Script done on 2020-11-22 13:42:40-07:00
