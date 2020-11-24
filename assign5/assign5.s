@@ -18,17 +18,20 @@
 	// number of cells n*m
 		// current cell
 		// offset to get a table cell's address
-		// generated random number
-	// number of bytes needed to allocate for the struct
+	// number of top docs to retrieve
+	// number of bytes needed to allocate for the indices array
 		// current row
 		// current column
+
+		// generated random number
 
 	// base address of table
 
 		// number of bytes needed to allocate for table		
 		// number of cells n*m
-	// current cell
+	// base for array of document indices
 		// generated random number
+
 
 
 
@@ -90,6 +93,14 @@ main:
 
 	add	sp,	sp,	x21			// allocate space for table
 
+	// Calculate required space for indices
+	// number of bytes allocated for table = 4 * m
+	sub	x26,	xzr,			x19	// negate number of rows
+	lsl	x26,	x26,	2	// multiply by 4
+	and	x26,	x26,	-16	// make sure x26 is divisible by 16
+
+	add	sp,	sp,	x26			// allocate space for indices
+
 	add	x0,	x29,	table_s				// first arg is table's base address	
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
@@ -104,8 +115,30 @@ main:
 	ldr	x0,	=linebreak
 	bl	printf
 
+	add	x0,	x29,	table_s				// first arg is table's base address
+	mov	x1,	x19					// second arg is number of rows
+	mov	x2,	x20					// third arg is number of cols
+	add	x4,	x29,	x21			// fourth arg is indices array base address
+	bl	topRelevantDocs
+
 	ldr	x0,	=header
 	bl	printf
+
+	// Calculate required space for table
+	// number of bytes allocated for table = 4 * m * n
+	mul	x22,		x19,		x20		// number of rows * number of columns	
+	sub	x21,		xzr,		x22	// negate x21
+	lsl	x21,		x21,	2		// multiply by 4
+	and	x21,		x21,	-16		// make sure x21 is divisible by 16
+	// Calculate required space for indices
+	// number of bytes allocated for table = 4 * m
+	sub	x26,	xzr,		x19		// negate number of rows
+	lsl	x26,	x26,	2	// multiply by 4
+	and	x26,	x26,	-16	// make sure x26 is divisible by 16
+
+	sub	sp,	sp,	x21		// deallocate memory used for table
+	sub	sp,	sp,	x26		// deallocate memory used for indices array
+
 	b 	exitMain
 
 invalidargs:
@@ -113,8 +146,6 @@ invalidargs:
 	bl	printf	
 
 exitMain:	
-	sub	sp,	sp,	x21		// deallocate memory used for table
-
 	
 	ldp	x29,	x30,	[sp], 16
 	ret
@@ -327,6 +358,117 @@ inc_col:
 	ret
 	
 
+
+
+//topRelevantDocs(&table, numrows, numcolumns, numtoretrieve, &indices)
+topRelevantDocs: 
+
+	
+	stp	x29,	x30,	[sp, alloc]!
+	mov	x29,	sp
+	
+
+
+	str	x19,	[x29, x19_s]
+	str	x20,	[x29, x20_s]
+	str	x21,	[x29, x21_s]
+	str	x22,	[x29, x22_s]
+	str	x23,	[x29, x23_s]
+	str	x24,	[x29, x24_s]
+	str	x25,	[x29, x25_s]
+	str	x26,	[x29, x26_s]
+	str	x27,	[x29, x27_s]
+	str	x28,	[x29, x28_s]
+
+
+	mov	x26,		x0		// remember table base address
+	mov	x19,			x1		// remember num rows
+	mov	x20,			x2		// remember num cols
+	mov	x25,	x3		// remember num top docs to retrieve
+	mov	x23,		x4		// remember indices array base address		
+
+	// initialize unsorted array of indices 
+	bl	init_indices
+
+	ldr	x19,	[x29, x19_s]
+	ldr	x20,	[x29, x20_s]
+	ldr	x21,	[x29, x21_s]
+	ldr	x22,	[x29, x22_s]
+	ldr	x23,	[x29, x23_s]
+	ldr	x24,	[x29, x24_s]
+	ldr	x25,	[x29, x25_s]
+	ldr	x26,	[x29, x26_s]
+	ldr	x27,	[x29, x27_s]
+	ldr	x28,	[x29, x28_s]
+
+
+	
+	ldp	x29,	x30,	[sp], dealloc
+	ret
+	
+
+
+		// Register for unsorted row index
+//init_indices(&indices, numrows)
+// generates an unsorted indices array
+init_indices:
+	
+	stp	x29,	x30,	[sp, alloc]!
+	mov	x29,	sp
+	
+
+
+	str	x19,	[x29, x19_s]
+	str	x20,	[x29, x20_s]
+	str	x21,	[x29, x21_s]
+	str	x22,	[x29, x22_s]
+	str	x23,	[x29, x23_s]
+	str	x24,	[x29, x24_s]
+	str	x25,	[x29, x25_s]
+	str	x26,	[x29, x26_s]
+	str	x27,	[x29, x27_s]
+	str	x28,	[x29, x28_s]
+
+
+	mov	x23,		x0		// remember base address of indices array			
+	mov	x19,			x1		// remember number of rows
+
+	mov	w27,		wzr
+
+init_indices_loop:
+	b	init_indices_loop_test			// execute loop test
+
+init_indices_loop_body:
+	mov	x24,	xzr
+	//calculate offset: offset = row * numcols * 4
+	sub	x24,	x24,		w27, UXTB #0	// offset = -row
+	lsl	x24,	x24,	2			// offset *= 4
+	//str	w27,		[x23, x24]		// store index in indices array	
+
+	add	w27,		w27,		1	// next row
+
+init_indices_loop_test:
+	cmp	x19,		w27, UXTB #0			// if row < number of rows
+	b.le	reload_init_indices	
+	b	init_indices_loop_body			// execute loop body
+
+reload_init_indices:
+	ldr	x19,	[x29, x19_s]
+	ldr	x20,	[x29, x20_s]
+	ldr	x21,	[x29, x21_s]
+	ldr	x22,	[x29, x22_s]
+	ldr	x23,	[x29, x23_s]
+	ldr	x24,	[x29, x24_s]
+	ldr	x25,	[x29, x25_s]
+	ldr	x26,	[x29, x26_s]
+	ldr	x27,	[x29, x27_s]
+	ldr	x28,	[x29, x28_s]
+
+
+	
+	ldp	x29,	x30,	[sp], dealloc
+	ret
+	
 
 
 

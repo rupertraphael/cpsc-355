@@ -18,18 +18,21 @@ define(table_alloc_r, x21)	// number of bytes needed to allocate for table
 define(count_cells_r, x22)	// number of cells n*m
 define(cell_r, x23)		// current cell
 define(offset_r, x24)		// offset to get a table cell's address
-define(randNum_r, w25)		// generated random number
-define(struct_alloc_r, x26)	// number of bytes needed to allocate for the struct
+define(numtoretrieve_r, x25)	// number of top docs to retrieve
+define(indices_alloc_r, x26)	// number of bytes needed to allocate for the indices array
 define(row_r, x27)		// current row
 define(col_r, x28)		// current column
+
+define(randNum_r, w25)		// generated random number
 
 define(table_base_r, x26)	// base address of table
 
 define(maxword_r, x21)		// number of bytes needed to allocate for table		
 define(maxoccur_r, x22)		// number of cells n*m
-define(struct_base_r, x23)	// current cell
+define(indices_base_r, x23)	// base for array of document indices
 define(occur_r, x25)		// generated random number
 define(size_r, x9)
+
 
 define(
 	startfunction, 
@@ -98,6 +101,14 @@ main:
 
 	add	sp,	sp,	table_alloc_r			// allocate space for table
 
+	// Calculate required space for indices
+	// number of bytes allocated for table = 4 * m
+	sub	indices_alloc_r,	xzr,			m_r	// negate number of rows
+	lsl	indices_alloc_r,	indices_alloc_r,	2	// multiply by 4
+	and	indices_alloc_r,	indices_alloc_r,	-16	// make sure indices_alloc_r is divisible by 16
+
+	add	sp,	sp,	indices_alloc_r			// allocate space for indices
+
 	add	x0,	x29,	table_s				// first arg is table's base address	
 	mov	x1,	m_r					// second arg is number of rows
 	mov	x2,	n_r					// third arg is number of cols
@@ -112,8 +123,30 @@ main:
 	ldr	x0,	=linebreak
 	bl	printf
 
+	add	x0,	x29,	table_s				// first arg is table's base address
+	mov	x1,	m_r					// second arg is number of rows
+	mov	x2,	n_r					// third arg is number of cols
+	add	x4,	x29,	table_alloc_r			// fourth arg is indices array base address
+	bl	topRelevantDocs
+
 	ldr	x0,	=header
 	bl	printf
+
+	// Calculate required space for table
+	// number of bytes allocated for table = 4 * m * n
+	mul	count_cells_r,		m_r,		n_r		// number of rows * number of columns	
+	sub	table_alloc_r,		xzr,		count_cells_r	// negate table_alloc_r
+	lsl	table_alloc_r,		table_alloc_r,	2		// multiply by 4
+	and	table_alloc_r,		table_alloc_r,	-16		// make sure table_alloc_r is divisible by 16
+	// Calculate required space for indices
+	// number of bytes allocated for table = 4 * m
+	sub	indices_alloc_r,	xzr,		m_r		// negate number of rows
+	lsl	indices_alloc_r,	indices_alloc_r,	2	// multiply by 4
+	and	indices_alloc_r,	indices_alloc_r,	-16	// make sure indices_alloc_r is divisible by 16
+
+	sub	sp,	sp,	table_alloc_r		// deallocate memory used for table
+	sub	sp,	sp,	indices_alloc_r		// deallocate memory used for indices array
+
 	b 	exitMain
 
 invalidargs:
@@ -121,8 +154,6 @@ invalidargs:
 	bl	printf	
 
 exitMain:	
-	sub	sp,	sp,	table_alloc_r		// deallocate memory used for table
-
 	endfunction(16)
 
 // macro for calculating needed memory and address offsets
@@ -274,6 +305,61 @@ inc_col:
 
 	endfunction(dealloc)
 
+
+//topRelevantDocs(&table, numrows, numcolumns, numtoretrieve, &indices)
+topRelevantDocs: 
+
+	startfunction(alloc)
+
+	str_x()
+
+	mov	table_base_r,		x0		// remember table base address
+	mov	m_r,			x1		// remember num rows
+	mov	n_r,			x2		// remember num cols
+	mov	numtoretrieve_r,	x3		// remember num top docs to retrieve
+	mov	indices_base_r,		x4		// remember indices array base address		
+
+	// initialize unsorted array of indices 
+	bl	init_indices
+
+	ldr_x()
+
+	endfunction(dealloc)
+
+define(row_wr, w27)		// Register for unsorted row index
+//init_indices(&indices, numrows)
+// generates an unsorted indices array
+init_indices:
+	startfunction(alloc)
+
+	str_x()
+
+	mov	indices_base_r,		x0		// remember base address of indices array			
+	mov	m_r,			x1		// remember number of rows
+
+	mov	row_wr,		wzr
+
+init_indices_loop:
+	b	init_indices_loop_test			// execute loop test
+
+init_indices_loop_body:
+	mov	offset_r,	xzr
+	//calculate offset: offset = row * numcols * 4
+	sub	offset_r,	offset_r,		row_wr, UXTB #0	// offset = -row
+	lsl	offset_r,	offset_r,	2			// offset *= 4
+	str	row_wr,		[indices_base_r, offset_r]		// store index in indices array	
+
+	add	row_wr,		row_wr,		1	// next row
+
+init_indices_loop_test:
+	cmp	m_r,		row_wr, UXTB #0			// if row < number of rows
+	b.le	reload_init_indices	
+	b	init_indices_loop_body			// execute loop body
+
+reload_init_indices:
+	ldr_x()
+
+	endfunction(dealloc)
 
 
 init_subr_x()
