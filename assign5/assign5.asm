@@ -6,6 +6,8 @@
 
 	.text
 	theD: 		.string "%-6d"
+	testint:	.string "%d\n"
+	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tHighest Frequency\tWord\tOccurence"
 	struct:		.string "%5d\t%25d\t%4d\t%9d"
 	error:		.string "Invalid arguments.\n"
@@ -122,11 +124,12 @@ main:
 
 	ldr	x0,	=linebreak
 	bl	printf
-
+	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	m_r					// second arg is number of rows
 	mov	x2,	n_r					// third arg is number of cols
-	add	x4,	x29,	table_alloc_r			// fourth arg is indices array base address
+	mov	x3,	4					// fourth arg how many to retrieve
+	add	x4,	x29,	table_alloc_r			// fifth arg is indices array base address
 	bl	topRelevantDocs
 
 	ldr	x0,	=header
@@ -305,7 +308,14 @@ inc_col:
 
 	endfunction(dealloc)
 
-
+define(swapped_r, x21)
+define(temprow_r, w10)
+define(mless_r, x11)
+define(mplus_r,	x12)
+define(nextoccur_r, w13)
+define(nextrow_r, w14)
+define(frequency_dr, d9)
+define(nextfrequency_dr, d10)
 //topRelevantDocs(&table, numrows, numcolumns, numtoretrieve, &indices)
 topRelevantDocs: 
 
@@ -320,7 +330,104 @@ topRelevantDocs:
 	mov	indices_base_r,		x4		// remember indices array base address		
 
 	// initialize unsorted array of indices 
+	mov	x0,	indices_base_r
 	bl	init_indices
+
+	mov	row_r,		xzr		// start at row 0	
+	sub	mless_r,	m_r,	1	// initialize numrows - 1
+	// sort indices using frequency
+sorting_outer_loop:
+	mov	swapped_r,	xzr
+	
+	mov	row_r,		xzr
+sorting_inner_loop:
+	b	sorting_inner_test
+sorting_inner_body:
+	// if frequency(row, col) < frequency(row + 1, col), swap	
+
+	// get frequency(row, col)
+	mov	x0,	table_base_r
+	mov	x1,	n_r
+	lsl	offset_r,	row_r,		2		// offset = row * 4
+	sub	offset_r,	xzr,		offset_r	// negate offset	
+	ldr	w2,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+	mov	x3,	xzr
+	bl	calculateFrequency
+	fmov	frequency_dr,	d0	
+
+	// get frequency(row + 1, col)
+	mov	x0,	table_base_r
+	mov	x1,	n_r
+	add	row_r,	row_r,	1
+	lsl	offset_r,	row_r,		2		// offset = row * 4
+	sub	offset_r,	xzr,		offset_r	// negate offset	
+	ldr	w2,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+	mov	x3,	xzr
+	bl	calculateFrequency
+	fmov	nextfrequency_dr,	d0	
+
+	fcmp	frequency_dr,	nextfrequency_dr
+	b.ge	sorting_inner_test
+
+sorting_inner_loop_swap:
+	sub	row_r,	row_r, 1
+	
+	// tempRow = indices[row]
+	lsl	offset_r,	row_r,		2		// offset = row * 4
+	sub	offset_r,	xzr,		offset_r	// negate offset	
+	ldr	temprow_r,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+
+	add	row_r,	row_r, 1
+
+	// indices[row] = indices[row + 1]	
+	lsl	offset_r,	row_r,		2		// offset = row * 4
+	sub	offset_r,	xzr,		offset_r	// negate offset	
+	ldr	nextrow_r,	[indices_base_r, offset_r]	// offset = indices[row + 1] which is one of the m row indices
+	sub	row_r,	row_r, 1
+	lsl	offset_r,	row_r,		2		// offset = row * 4
+	sub	offset_r,	xzr,		offset_r	// negate offset	
+	str	nextrow_r,	[indices_base_r, offset_r]	// indices[row] = indices[row + 1]		
+
+	// indices[row + 1] = tempRow
+	add	row_r,	row_r, 1
+	lsl	offset_r,	row_r,		2		// offset = row * 4
+	sub	offset_r,	xzr,		offset_r	// negate offset	
+	str	temprow_r,	[indices_base_r, offset_r]	// indices[row + 1] = tempRow
+
+	mov	swapped_r,	1
+
+sorting_inner_test:	
+	sub	mless_r,	m_r,	1	// initialize numrows - 1
+	cmp	row_r,		mless_r			// if row < numrows - 1
+	b.lt	sorting_inner_body			// arrange next items	
+
+	mov	row_r,		xzr
+
+sorting_outer_test:
+	cmp	swapped_r,	xzr
+	b.ne	sorting_outer_loop
+	
+	mov	row_r,		xzr
+display_docs:
+	lsl	offset_r,	row_r,		2		// offset = row * 4
+	sub	offset_r,	xzr,		offset_r	// negate offset	
+	ldr	temprow_r,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+	mov	w2,	temprow_r
+	
+	// get frequency(row, col)
+	mov	x0,	table_base_r
+	mov	x1,	n_r
+	mov	x3,	xzr
+	bl	calculateFrequency
+	fmov	d1,	d0	
+
+	ldr	x0,	=testfloat
+	bl	printf
+
+	add	row_r,		row_r,		1
+
+	cmp	row_r,		numtoretrieve_r
+	b.lt	display_docs
 
 	ldr_x()
 
@@ -344,7 +451,7 @@ init_indices_loop:
 
 init_indices_loop_body:
 	mov	offset_r,	xzr
-	//calculate offset: offset = row * numcols * 4
+	//calculate offset: offset = -row * 4
 	sub	offset_r,	offset_r,		row_wr, UXTB #0	// offset = -row
 	lsl	offset_r,	offset_r,	2			// offset *= 4
 	str	row_wr,		[indices_base_r, offset_r]		// store index in indices array	
@@ -353,13 +460,46 @@ init_indices_loop_body:
 
 init_indices_loop_test:
 	cmp	m_r,		row_wr, UXTB #0			// if row < number of rows
-	b.le	reload_init_indices	
+	b.le	reload_init_indices			// essentially, quit loop	
 	b	init_indices_loop_body			// execute loop body
 
 reload_init_indices:
 	ldr_x()
 
 	endfunction(dealloc)
+
+define(total_r, w9)
+// calculateSize(&table, numcols, row)
+calculateSize:
+	startfunction(alloc)
+
+	str_x()
+
+	mov	table_base_r,	x0		// remember table base address
+	mov	n_r,		x1		// remember num of cols
+	mov	row_r,		x2		// remember row to calculate size of
+
+	mov	total_r,	wzr		// initialize total to 0
+	mov	col_r,		xzr		// start at col 0
+size_loop:
+	// calculate offset = ( row * numcols + col ) * 4
+	mul	offset_r,	row_r,		n_r		// offset = row * numcols
+	add	offset_r,	offset_r,	col_r		// offset += col
+	lsl	offset_r,	offset_r,	2		// offset *= 4
+	sub	offset_r,	xzr,		offset_r	// negate offset
+	ldr	randNum_r,	[table_base_r, offset_r]	// load occurence from table at given row and column	
+	add	total_r,	total_r,	randNum_r	// add occurence to total to eventually get size
+	
+	add	col_r,		col_r,		1		// next column
+
+	cmp	col_r,		n_r	// loop if col < numcols
+	b.lt	size_loop
+
+	mov	w0,	total_r		// return total size of row
+
+	ldr_x()
+
+	endfunction(dealloc)	
 
 
 init_subr_x()
@@ -368,19 +508,37 @@ dealloc = -alloc
 size_s = x28_s + 8		// position of size value relative to frame pointer 
 
 init_subr_x()
+define(occurence_dr, d11)
+define(size_dr,	d12)
 // frequency = word occurences in doc * 100 / size of doc
-// calculateFrequency(occurences, size)
+// calculateFrequency(&table, numcols, row, col)
 calculateFrequency:
 	startfunction(alloc)
 
 	str_x()
 
-	mov	x9,	100
+	mov	table_base_r,	x0		// remember table base address
+	mov	n_r,		x1		// remember num cols
+	mov	row_r,		x2		// remember row
+	mov	col_r,		x3		// remember col
 
-	// Multiply by 100
-	mul	x0,	x0,	x9	
-	// Divide
-	udiv	x0,	x0,	x1
+	bl 	calculateSize			// calculate size with &table, numcols, row
+	scvtf	size_dr,	x0		// remember size
+
+	mov	x10,	100
+	scvtf	d10,	x10
+
+	// calculate offset = ( row * numcols + col ) * 4
+	mul	offset_r,	row_r,		n_r		// offset = row * numcols
+	add	offset_r,	offset_r,	col_r		// offset += col
+	lsl	offset_r,	offset_r,	2		// offset *= 4
+	sub	offset_r,	xzr,		offset_r	// negate offset
+
+	ldr	randNum_r,	[table_base_r,	offset_r]	// load occurence
+	scvtf	occurence_dr,	randNum_r			// convert occurence to double
+	
+	fmul	occurence_dr,	occurence_dr,	d10		// multiply occurence with 100
+	fdiv	d0,		occurence_dr,	size_dr		// return frequency as float
 
 	ldr_x()
 

@@ -6,6 +6,8 @@
 
 	.text
 	theD: 		.string "%-6d"
+	testint:	.string "%d\n"
+	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tHighest Frequency\tWord\tOccurence"
 	struct:		.string "%5d\t%25d\t%4d\t%9d"
 	error:		.string "Invalid arguments.\n"
@@ -114,11 +116,12 @@ main:
 
 	ldr	x0,	=linebreak
 	bl	printf
-
+	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
-	add	x4,	x29,	x21			// fourth arg is indices array base address
+	mov	x3,	4					// fourth arg how many to retrieve
+	add	x4,	x29,	x21			// fifth arg is indices array base address
 	bl	topRelevantDocs
 
 	ldr	x0,	=header
@@ -360,6 +363,13 @@ inc_col:
 
 
 
+
+
+
+
+
+
+
 //topRelevantDocs(&table, numrows, numcolumns, numtoretrieve, &indices)
 topRelevantDocs: 
 
@@ -388,7 +398,104 @@ topRelevantDocs:
 	mov	x23,		x4		// remember indices array base address		
 
 	// initialize unsorted array of indices 
+	mov	x0,	x23
 	bl	init_indices
+
+	mov	x27,		xzr		// start at row 0	
+	sub	x11,	x19,	1	// initialize numrows - 1
+	// sort indices using frequency
+sorting_outer_loop:
+	mov	x21,	xzr
+	
+	mov	x27,		xzr
+sorting_inner_loop:
+	b	sorting_inner_test
+sorting_inner_body:
+	// if frequency(row, col) < frequency(row + 1, col), swap	
+
+	// get frequency(row, col)
+	mov	x0,	x26
+	mov	x1,	x20
+	lsl	x24,	x27,		2		// offset = row * 4
+	sub	x24,	xzr,		x24	// negate offset	
+	ldr	w2,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+	mov	x3,	xzr
+	bl	calculateFrequency
+	fmov	d9,	d0	
+
+	// get frequency(row + 1, col)
+	mov	x0,	x26
+	mov	x1,	x20
+	add	x27,	x27,	1
+	lsl	x24,	x27,		2		// offset = row * 4
+	sub	x24,	xzr,		x24	// negate offset	
+	ldr	w2,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+	mov	x3,	xzr
+	bl	calculateFrequency
+	fmov	d10,	d0	
+
+	fcmp	d9,	d10
+	b.ge	sorting_inner_test
+
+sorting_inner_loop_swap:
+	sub	x27,	x27, 1
+	
+	// tempRow = indices[row]
+	lsl	x24,	x27,		2		// offset = row * 4
+	sub	x24,	xzr,		x24	// negate offset	
+	ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+
+	add	x27,	x27, 1
+
+	// indices[row] = indices[row + 1]	
+	lsl	x24,	x27,		2		// offset = row * 4
+	sub	x24,	xzr,		x24	// negate offset	
+	ldr	w14,	[x23, x24]	// offset = indices[row + 1] which is one of the m row indices
+	sub	x27,	x27, 1
+	lsl	x24,	x27,		2		// offset = row * 4
+	sub	x24,	xzr,		x24	// negate offset	
+	str	w14,	[x23, x24]	// indices[row] = indices[row + 1]		
+
+	// indices[row + 1] = tempRow
+	add	x27,	x27, 1
+	lsl	x24,	x27,		2		// offset = row * 4
+	sub	x24,	xzr,		x24	// negate offset	
+	str	w10,	[x23, x24]	// indices[row + 1] = tempRow
+
+	mov	x21,	1
+
+sorting_inner_test:	
+	sub	x11,	x19,	1	// initialize numrows - 1
+	cmp	x27,		x11			// if row < numrows - 1
+	b.lt	sorting_inner_body			// arrange next items	
+
+	mov	x27,		xzr
+
+sorting_outer_test:
+	cmp	x21,	xzr
+	b.ne	sorting_outer_loop
+	
+	mov	x27,		xzr
+display_docs:
+	lsl	x24,	x27,		2		// offset = row * 4
+	sub	x24,	xzr,		x24	// negate offset	
+	ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+	mov	w2,	w10
+	
+	// get frequency(row, col)
+	mov	x0,	x26
+	mov	x1,	x20
+	mov	x3,	xzr
+	bl	calculateFrequency
+	fmov	d1,	d0	
+
+	ldr	x0,	=testfloat
+	bl	printf
+
+	add	x27,		x27,		1
+
+	cmp	x27,		x25
+	b.lt	display_docs
 
 	ldr	x19,	[x29, x19_s]
 	ldr	x20,	[x29, x20_s]
@@ -440,16 +547,16 @@ init_indices_loop:
 
 init_indices_loop_body:
 	mov	x24,	xzr
-	//calculate offset: offset = row * numcols * 4
+	//calculate offset: offset = -row * 4
 	sub	x24,	x24,		w27, UXTB #0	// offset = -row
 	lsl	x24,	x24,	2			// offset *= 4
-	//str	w27,		[x23, x24]		// store index in indices array	
+	str	w27,		[x23, x24]		// store index in indices array	
 
 	add	w27,		w27,		1	// next row
 
 init_indices_loop_test:
 	cmp	x19,		w27, UXTB #0			// if row < number of rows
-	b.le	reload_init_indices	
+	b.le	reload_init_indices			// essentially, quit loop	
 	b	init_indices_loop_body			// execute loop body
 
 reload_init_indices:
@@ -470,6 +577,67 @@ reload_init_indices:
 	ret
 	
 
+
+
+// calculateSize(&table, numcols, row)
+calculateSize:
+	
+	stp	x29,	x30,	[sp, alloc]!
+	mov	x29,	sp
+	
+
+
+	str	x19,	[x29, x19_s]
+	str	x20,	[x29, x20_s]
+	str	x21,	[x29, x21_s]
+	str	x22,	[x29, x22_s]
+	str	x23,	[x29, x23_s]
+	str	x24,	[x29, x24_s]
+	str	x25,	[x29, x25_s]
+	str	x26,	[x29, x26_s]
+	str	x27,	[x29, x27_s]
+	str	x28,	[x29, x28_s]
+
+
+	mov	x26,	x0		// remember table base address
+	mov	x20,		x1		// remember num of cols
+	mov	x27,		x2		// remember row to calculate size of
+
+	mov	w9,	wzr		// initialize total to 0
+	mov	x28,		xzr		// start at col 0
+size_loop:
+	// calculate offset = ( row * numcols + col ) * 4
+	mul	x24,	x27,		x20		// offset = row * numcols
+	add	x24,	x24,	x28		// offset += col
+	lsl	x24,	x24,	2		// offset *= 4
+	sub	x24,	xzr,		x24	// negate offset
+	ldr	w25,	[x26, x24]	// load occurence from table at given row and column	
+	add	w9,	w9,	w25	// add occurence to total to eventually get size
+	
+	add	x28,		x28,		1		// next column
+
+	cmp	x28,		x20	// loop if col < numcols
+	b.lt	size_loop
+
+	mov	w0,	w9		// return total size of row
+
+	ldr	x19,	[x29, x19_s]
+	ldr	x20,	[x29, x20_s]
+	ldr	x21,	[x29, x21_s]
+	ldr	x22,	[x29, x22_s]
+	ldr	x23,	[x29, x23_s]
+	ldr	x24,	[x29, x24_s]
+	ldr	x25,	[x29, x25_s]
+	ldr	x26,	[x29, x26_s]
+	ldr	x27,	[x29, x27_s]
+	ldr	x28,	[x29, x28_s]
+
+
+	
+	ldp	x29,	x30,	[sp], dealloc
+	ret
+	
+	
 
 
 alloc = -(16 + 8 * 9) & -16
@@ -504,8 +672,10 @@ alloc = -(16 + 8 * 9) & -16
 	x27_s = x26_s + 8
 	x28_s = x27_s + 8
 
+
+
 // frequency = word occurences in doc * 100 / size of doc
-// calculateFrequency(occurences, size)
+// calculateFrequency(&table, numcols, row, col)
 calculateFrequency:
 	
 	stp	x29,	x30,	[sp, alloc]!
@@ -525,12 +695,28 @@ calculateFrequency:
 	str	x28,	[x29, x28_s]
 
 
-	mov	x9,	100
+	mov	x26,	x0		// remember table base address
+	mov	x20,		x1		// remember num cols
+	mov	x27,		x2		// remember row
+	mov	x28,		x3		// remember col
 
-	// Multiply by 100
-	mul	x0,	x0,	x9	
-	// Divide
-	udiv	x0,	x0,	x1
+	bl 	calculateSize			// calculate size with &table, numcols, row
+	scvtf	d12,	x0		// remember size
+
+	mov	x10,	100
+	scvtf	d10,	x10
+
+	// calculate offset = ( row * numcols + col ) * 4
+	mul	x24,	x27,		x20		// offset = row * numcols
+	add	x24,	x24,	x28		// offset += col
+	lsl	x24,	x24,	2		// offset *= 4
+	sub	x24,	xzr,		x24	// negate offset
+
+	ldr	w25,	[x26,	x24]	// load occurence
+	scvtf	d11,	w25			// convert occurence to double
+	
+	fmul	d11,	d11,	d10		// multiply occurence with 100
+	fdiv	d0,		d11,	d12		// return frequency as float
 
 	ldr	x19,	[x29, x19_s]
 	ldr	x20,	[x29, x20_s]
