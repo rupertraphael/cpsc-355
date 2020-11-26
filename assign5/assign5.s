@@ -5,13 +5,16 @@
 // --------------------------------------------------------
 
 	.text
-	theD: 		.string "%-6d"
+	theD: 		.string "%d"
+	cell:		.string "%-6d"
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
-	header: 	.string	"Document\tWord\tOccurences\tFrequency"
-	rowinfo:	.string "%5d\t%25d\t%4d\t%9.3f"
+	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
+	question:	.string	"How many documents do you want to retrieve?"
+	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
+
 
 				// Eventually, registers for:
 		// number of rows/documents
@@ -135,16 +138,22 @@ main:
 
 	ldr	x0,	=linebreak
 	bl	printf
+
+	// Ask for number of docs to retrieve
+	ldr	x0,	=question
+	bl	printf
+
+	ldr	x0,	=theD
+	ldr	x1,	=varN
+	bl	scanf
+	ldr	x3,	=varN
+	ldr	x3,	[x3]
 	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
-	mov	x3,	4					// fourth arg how many to retrieve
 	add	x4,	x29,	x21			// fifth arg is indices array base address
 	bl	topRelevantDocs
-
-	ldr	x0,	=header
-	bl	printf
 
 	// Calculate required space for table
 	// number of bytes allocated for table = 4 * m * n
@@ -350,7 +359,7 @@ displayloop:
 	
 
 	// print occurence at current table cell
-	ldr	x0,	=theD			// load string format and use as argument for printing
+	ldr	x0,	=cell			// load string format and use as argument for printing
 	mov	w1,	w25		// use loaded table cell value as argument for printing
 	bl	printf
 
@@ -476,9 +485,6 @@ sorting_inner_loop_swap:
 	sub	x27,	x27, 1
 	
 	// tempRow = indices[row]
-	//lsl	x24,	x27,		2		// offset = row * 4
-	//sub	x24,	xzr,		x24	// negate offset	
-	//ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
 		
 	sub	x27,	xzr,	x27		// make row negative so that offset is negative
 	ldr	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
@@ -496,9 +502,6 @@ sorting_inner_loop_swap:
 	
 
 	sub	x27,	x27, 1
-//	lsl	x24,	x27,		2		// offset = row * 4
-//	sub	x24,	xzr,		x24	// negate offset	
-//	str	w14,	[x23, x24]	// indices[row] = indices[row + 1]		
 		
 	sub	x27,	xzr,	x27		// make row negative so that offset is negative
 	str	w14,	[x23, x27, LSL 2] 	// load value in memory into given register 
@@ -508,9 +511,6 @@ sorting_inner_loop_swap:
 
 	// indices[row + 1] = tempRow
 	add	x27,	x27, 1
-//	lsl	x24,	x27,		2		// offset = row * 4
-//	sub	x24,	xzr,		x24	// negate offset	
-//	str	w10,	[x23, x24]	// indices[row + 1] = tempRow
 		
 	sub	x27,	xzr,	x27		// make row negative so that offset is negative
 	str	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
@@ -531,11 +531,11 @@ sorting_outer_test:
 	cmp	x21,	xzr
 	b.ne	sorting_outer_loop
 	
+	ldr	x0,	=header
+	bl	printf
+
 	mov	x27,		xzr
 display_topdocs:
-	//lsl	x24,	x27,		2		// offset = row * 4
-	//sub	x24,	xzr,		x24	// negate offset	
-	//ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
 		
 	sub	x27,	xzr,	x27		// make row negative so that offset is negative
 	ldr	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
@@ -551,7 +551,13 @@ display_topdocs:
 	bl	calculateFrequency
 	fmov	d4,	d0	
 
-	mov	x1,	x27
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
+	mov	w1,	w10
 	mov	x2,	x28
 	
 	// x27 is gonna be used an offset for loading int value from memory
@@ -831,3 +837,6 @@ calculateFrequency:
 	ret
 	
 
+
+	.data
+	varN:		.int	0

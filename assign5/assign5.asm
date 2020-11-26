@@ -5,13 +5,16 @@
 // --------------------------------------------------------
 
 	.text
-	theD: 		.string "%-6d"
+	theD: 		.string "%d"
+	cell:		.string "%-6d"
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
-	header: 	.string	"Document\tWord\tOccurences\tFrequency"
-	rowinfo:	.string "%5d\t%25d\t%4d\t%9.3f"
+	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
+	question:	.string	"How many documents do you want to retrieve?"
+	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
+
 
 				// Eventually, registers for:
 define(m_r, x19)		// number of rows/documents
@@ -185,16 +188,22 @@ main:
 
 	ldr	x0,	=linebreak
 	bl	printf
+
+	// Ask for number of docs to retrieve
+	ldr	x0,	=question
+	bl	printf
+
+	ldr	x0,	=theD
+	ldr	x1,	=varN
+	bl	scanf
+	ldr	x3,	=varN
+	ldr	x3,	[x3]
 	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	m_r					// second arg is number of rows
 	mov	x2,	n_r					// third arg is number of cols
-	mov	x3,	4					// fourth arg how many to retrieve
 	add	x4,	x29,	table_alloc_r			// fifth arg is indices array base address
 	bl	topRelevantDocs
-
-	ldr	x0,	=header
-	bl	printf
 
 	// Calculate required space for table
 	// number of bytes allocated for table = 4 * m * n
@@ -340,7 +349,7 @@ displayloop:
 	load_int_from_array2d(table_base_r, row_r, col_r, n_r, randNum_r)	
 
 	// print occurence at current table cell
-	ldr	x0,	=theD			// load string format and use as argument for printing
+	ldr	x0,	=cell			// load string format and use as argument for printing
 	mov	w1,	randNum_r		// use loaded table cell value as argument for printing
 	bl	printf
 
@@ -454,6 +463,9 @@ sorting_outer_test:
 	cmp	swapped_r,	xzr
 	b.ne	sorting_outer_loop
 	
+	ldr	x0,	=header
+	bl	printf
+
 	mov	row_r,		xzr
 display_topdocs:
 	load_int_from_array1d(indices_base_r, row_r, temprow_r)
@@ -466,7 +478,8 @@ display_topdocs:
 	bl	calculateFrequency
 	fmov	d4,	d0	
 
-	mov	x1,	row_r
+	load_int_from_array1d(indices_base_r, row_r, temprow_r)
+	mov	w1,	temprow_r
 	mov	x2,	col_r
 	load_int_from_array2d(table_base_r, row_r, col_r, n_r, w3)	
 	ldr	x0,	=rowinfo
@@ -586,3 +599,6 @@ calculateFrequency:
 	ldr_x()
 
 	endfunction(dealloc)
+
+	.data
+	varN:		.int	0
