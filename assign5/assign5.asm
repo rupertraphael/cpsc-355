@@ -10,7 +10,8 @@
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
-	question:	.string	"How many documents do you want to retrieve?"
+	askcolumn:	.string	"Which word?"
+	askretrieve:	.string	"How many documents do you want to retrieve?"
 	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
@@ -189,20 +190,31 @@ main:
 	ldr	x0,	=linebreak
 	bl	printf
 
-	// Ask for number of docs to retrieve
-	ldr	x0,	=question
+	// Ask for which column
+	ldr	x0,	=askcolumn
 	bl	printf
 
 	ldr	x0,	=theD
 	ldr	x1,	=varN
 	bl	scanf
 	ldr	x3,	=varN
-	ldr	x3,	[x3]
+	ldr	col_r,	[x3]
+
+	// Ask for number of docs to retrieve
+	ldr	x0,	=askretrieve
+	bl	printf
+
+	ldr	x0,	=theD
+	ldr	x1,	=varN
+	bl	scanf
+	ldr	x4,	=varN
+	ldr	x4,	[x4]
 	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	m_r					// second arg is number of rows
 	mov	x2,	n_r					// third arg is number of cols
-	add	x4,	x29,	table_alloc_r			// fifth arg is indices array base address
+	mov	x3,	col_r
+	add	x5,	x29,	table_alloc_r			// fifth arg is indices array base address
 	bl	topRelevantDocs
 
 	// Calculate required space for table
@@ -302,11 +314,10 @@ initialize:
 loop:
 	// Store random numbers in each table cell
 	// First, we generate the random number
+	mov	w0,	0
+	mov	w1,	9
 	bl	randomNum			// Generate random number
 	mov	randNum_r,	w0
-
-	and	randNum_r,	randNum_r,	MAX_RAND	// limit number from 0 - MAX_RAND		
-	add	randNum_r,	randNum_r,	1		// number is now 1 - MAX_RAND + 1 (i.e. 1-16)
 
 	str	randNum_r,	[table_base_r, offset_r]	// store number in array
 
@@ -321,12 +332,25 @@ loop:
 
 	endfunction(dealloc)
 
+define(divisor_r, w19)
+define(numerator_r, w20)
+define(min_r, w21)
 // randomNum(min, max)
 randomNum:
 	startfunction(alloc)
 	str_x()		// store caller-saved register values
 
+	mov	min_r,		w0		
+	mov	divisor_r,	w1
+	sub	divisor_r,	divisor_r,	min_r
+	add	divisor_r,	divisor_r,	1
 	bl	rand
+	mov	randNum_r,	w0
+	udiv	numerator_r,	randNum_r,	divisor_r
+	msub	randNum_r,	numerator_r,	divisor_r,	randNum_r	
+	add	randNum_r,	randNum_r,	min_r
+
+	mov	w0,	randNum_r
 
 	ldr_x()				// reload caller-saved register values	
 	endfunction(dealloc)
@@ -384,7 +408,7 @@ define(nextoccur_r, w13)
 define(nextrow_r, w14)
 define(frequency_dr, d9)
 define(nextfrequency_dr, d10)
-//topRelevantDocs(&table, numrows, numcolumns, numtoretrieve, &indices)
+//topRelevantDocs(&table, numrows, numcolumns, col, numtoretrieve, &indices)
 topRelevantDocs: 
 
 	startfunction(alloc)
@@ -394,8 +418,9 @@ topRelevantDocs:
 	mov	table_base_r,		x0		// remember table base address
 	mov	m_r,			x1		// remember num rows
 	mov	n_r,			x2		// remember num cols
-	mov	numtoretrieve_r,	x3		// remember num top docs to retrieve
-	mov	indices_base_r,		x4		// remember indices array base address		
+	mov	col_r,			x3		// remember column to retrieve
+	mov	numtoretrieve_r,	x4		// remember num top docs to retrieve
+	mov	indices_base_r,		x5		// remember indices array base address		
 
 	// initialize unsorted array of indices 
 	mov	x0,	indices_base_r
@@ -417,7 +442,7 @@ sorting_inner_body:
 	mov	x0,	table_base_r
 	mov	x1,	n_r
 	load_int_from_array1d(indices_base_r, row_r, w2)		
-	mov	x3,	xzr
+	mov	x3,	col_r
 	bl	calculateFrequency
 	fmov	frequency_dr,	d0	
 
@@ -426,7 +451,7 @@ sorting_inner_body:
 	mov	x1,	n_r
 	add	row_r,	row_r,	1
 	load_int_from_array1d(indices_base_r, row_r, w2)		
-	mov	x3,	xzr
+	mov	x3,	col_r
 	bl	calculateFrequency
 	fmov	nextfrequency_dr,	d0	
 
@@ -474,14 +499,16 @@ display_topdocs:
 	// get frequency(row, col)
 	mov	x0,	table_base_r
 	mov	x1,	n_r
-	mov	x3,	xzr
+	mov	x3,	col_r
 	bl	calculateFrequency
 	fmov	d4,	d0	
 
 	load_int_from_array1d(indices_base_r, row_r, temprow_r)
-	mov	w1,	temprow_r
+	mov	x1,	xzr
+	add	x1,	x1,	temprow_r, UXTW
 	mov	x2,	col_r
-	load_int_from_array2d(table_base_r, row_r, col_r, n_r, w3)	
+	load_int_from_array2d(table_base_r, x1, col_r, n_r, temprow_r)
+	mov	w3,	temprow_r	
 	ldr	x0,	=rowinfo
 	bl	printf
 	

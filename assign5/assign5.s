@@ -10,7 +10,8 @@
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
-	question:	.string	"How many documents do you want to retrieve?"
+	askcolumn:	.string	"Which word?"
+	askretrieve:	.string	"How many documents do you want to retrieve?"
 	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
@@ -139,20 +140,31 @@ main:
 	ldr	x0,	=linebreak
 	bl	printf
 
-	// Ask for number of docs to retrieve
-	ldr	x0,	=question
+	// Ask for which column
+	ldr	x0,	=askcolumn
 	bl	printf
 
 	ldr	x0,	=theD
 	ldr	x1,	=varN
 	bl	scanf
 	ldr	x3,	=varN
-	ldr	x3,	[x3]
+	ldr	x28,	[x3]
+
+	// Ask for number of docs to retrieve
+	ldr	x0,	=askretrieve
+	bl	printf
+
+	ldr	x0,	=theD
+	ldr	x1,	=varN
+	bl	scanf
+	ldr	x4,	=varN
+	ldr	x4,	[x4]
 	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
-	add	x4,	x29,	x21			// fifth arg is indices array base address
+	mov	x3,	x28
+	add	x5,	x29,	x21			// fifth arg is indices array base address
 	bl	topRelevantDocs
 
 	// Calculate required space for table
@@ -244,11 +256,10 @@ initialize:
 loop:
 	// Store random numbers in each table cell
 	// First, we generate the random number
+	mov	w0,	0
+	mov	w1,	9
 	bl	randomNum			// Generate random number
 	mov	w25,	w0
-
-	and	w25,	w25,	MAX_RAND	// limit number from 0 - MAX_RAND		
-	add	w25,	w25,	1		// number is now 1 - MAX_RAND + 1 (i.e. 1-16)
 
 	str	w25,	[x26, x24]	// store number in array
 
@@ -277,6 +288,9 @@ loop:
 	
 
 
+
+
+
 // randomNum(min, max)
 randomNum:
 	
@@ -296,7 +310,17 @@ randomNum:
 	str	x28,	[x29, x28_s]
 		// store caller-saved register values
 
+	mov	w21,		w0		
+	mov	w19,	w1
+	sub	w19,	w19,	w21
+	add	w19,	w19,	1
 	bl	rand
+	mov	w25,	w0
+	udiv	w20,	w25,	w19
+	msub	w25,	w20,	w19,	w25	
+	add	w25,	w25,	w21
+
+	mov	w0,	w25
 
 	ldr	x19,	[x29, x19_s]
 	ldr	x20,	[x29, x20_s]
@@ -408,7 +432,7 @@ inc_col:
 
 
 
-//topRelevantDocs(&table, numrows, numcolumns, numtoretrieve, &indices)
+//topRelevantDocs(&table, numrows, numcolumns, col, numtoretrieve, &indices)
 topRelevantDocs: 
 
 	
@@ -432,8 +456,9 @@ topRelevantDocs:
 	mov	x26,		x0		// remember table base address
 	mov	x19,			x1		// remember num rows
 	mov	x20,			x2		// remember num cols
-	mov	x25,	x3		// remember num top docs to retrieve
-	mov	x23,		x4		// remember indices array base address		
+	mov	x28,			x3		// remember column to retrieve
+	mov	x25,	x4		// remember num top docs to retrieve
+	mov	x23,		x5		// remember indices array base address		
 
 	// initialize unsorted array of indices 
 	mov	x0,	x23
@@ -460,7 +485,7 @@ sorting_inner_body:
 	sub	x27,	xzr,	x27		// make row positive again
 	
 		
-	mov	x3,	xzr
+	mov	x3,	x28
 	bl	calculateFrequency
 	fmov	d9,	d0	
 
@@ -474,7 +499,7 @@ sorting_inner_body:
 	sub	x27,	xzr,	x27		// make row positive again
 	
 		
-	mov	x3,	xzr
+	mov	x3,	x28
 	bl	calculateFrequency
 	fmov	d10,	d0	
 
@@ -547,7 +572,7 @@ display_topdocs:
 	// get frequency(row, col)
 	mov	x0,	x26
 	mov	x1,	x20
-	mov	x3,	xzr
+	mov	x3,	x28
 	bl	calculateFrequency
 	fmov	d4,	d0	
 
@@ -557,21 +582,23 @@ display_topdocs:
 	sub	x27,	xzr,	x27		// make row positive again
 	
 
-	mov	w1,	w10
+	mov	x1,	xzr
+	add	x1,	x1,	w10, UXTW
 	mov	x2,	x28
 	
 	// x27 is gonna be used an offset for loading int value from memory
 	// offset = (row * numcols + col) * 4
-	sub	x27,	xzr,	x27	// negate row
-	mul	x27,	x27,	x20	// row = row * numcols
-	sub	x27,	x27,	x28	// row -= col
-	ldr	w3,	[x26, x27, LSL 2] // load value from array
-	add 	x27,	x27,	x28	// row += col
-	sdiv	x27,	x27,	x20	// row /= numcols
-	sub	x27,	xzr,	x27	// make row positive again
+	sub	x1,	xzr,	x1	// negate row
+	mul	x1,	x1,	x20	// row = row * numcols
+	sub	x1,	x1,	x28	// row -= col
+	ldr	w10,	[x26, x1, LSL 2] // load value from array
+	add 	x1,	x1,	x28	// row += col
+	sdiv	x1,	x1,	x20	// row /= numcols
+	sub	x1,	xzr,	x1	// make row positive again
 	// row is now positive and restored
 	
-	
+
+	mov	w3,	w10	
 	ldr	x0,	=rowinfo
 	bl	printf
 	
