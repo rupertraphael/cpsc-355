@@ -35,7 +35,6 @@ define(indices_base_r, x23)	// base for array of document indices
 define(occur_r, x25)		// generated random number
 define(size_r, x9)
 
-
 define(
 	startfunction, 
 	`
@@ -51,6 +50,68 @@ define(
 	ret
 	'
 )
+
+// macro for loading an integer value from a 1D array into a given register
+// load_int_from_array1d(&array_r, row_r, value_wr)
+// &array_r - base address of a 1D array in memory
+// row_r - greater than or equal to 0
+// value_wr - 32-bit register that will contain the value in the 1D array at given row
+define(
+	load_int_from_array1d,
+	`	
+	sub	$2,	xzr,	$2		// make row negative so that offset is negative
+	ldr	$3,	[$1, $2, LSL 2] 	// load value in memory into given register 
+	sub	$2,	xzr,	$2		// make row positive again
+	'
+)
+// macro for storing an integer value into a 1D array
+// store_int_from_array1d(&array_r, row_r, value_wr)
+// &array_r - base address of a 1D array in memory
+// row_r - greater than or equal to 0
+// value_wr - 32-bit register that will contain the value in the 1D array at given row
+define(
+	store_int_from_array1d,
+	`	
+	sub	$2,	xzr,	$2		// make row negative so that offset is negative
+	str	$3,	[$1, $2, LSL 2] 	// load value in memory into given register 
+	sub	$2,	xzr,	$2		// make row positive again
+	'
+)
+// macro for loading an integer value from a 2D array into a given register
+// load_int_from_array2d(&array_r, row_r, col_r, numcols_r, value_wr) 
+define(
+	load_int_from_array2d,
+	`
+	// row_r is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	$2,	xzr,	$2	// negate row
+	mul	$2,	$2,	$4	// row = row * numcols
+	sub	$2,	$2,	$3	// row -= col
+	ldr	$5,	[$1, $2, LSL 2] // load value from array
+	add 	$2,	$2,	$3	// row += col
+	sdiv	$2,	$2,	$4	// row /= numcols
+	sub	$2,	xzr,	$2	// make row positive again
+	// row is now positive and restored
+	'
+)
+// macro for storing an integer value into a 2D array
+// store_int_from_array2d(&array_r, row_r, col_r, numcols_r, value_wr) 
+define(
+	store_int_from_array2d,
+	`
+	// row_r is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	$2,	xzr,	$2	// negate row
+	mul	$2,	$2,	$4	// row = row * numcols
+	sub	$2,	$2,	$3	// row -= col
+	str	$5,	[$1, $2, LSL 2] // store value into array
+	add 	$2,	$2,	$3	// row += col
+	sdiv	$2,	$2,	$4	// row /= numcols
+	sub	$2,	xzr,	$2	// make row positive again
+	// row is now positive and restored
+	'
+)
+
 
 TABLE_ELEMENT_SIZE = 4
 table_s = 0
@@ -276,14 +337,12 @@ display:
 
 displayloop:
 
-	ldr	randNum_r,	[table_base_r, offset_r]		// load table cell value at offset
+	load_int_from_array2d(table_base_r, row_r, col_r, n_r, randNum_r)	
 
 	// print occurence at current table cell
 	ldr	x0,	=theD			// load string format and use as argument for printing
 	mov	w1,	randNum_r		// use loaded table cell value as argument for printing
 	bl	printf
-
-	sub     offset_r,       offset_r,       TABLE_ELEMENT_SIZE	// decrement offset by table element size
 
 inc_col:
 	add	col_r,		col_r,		1			// increment column number to keep track of current table cell column
@@ -348,9 +407,7 @@ sorting_inner_body:
 	// get frequency(row, col)
 	mov	x0,	table_base_r
 	mov	x1,	n_r
-	lsl	offset_r,	row_r,		2		// offset = row * 4
-	sub	offset_r,	xzr,		offset_r	// negate offset	
-	ldr	w2,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+	load_int_from_array1d(indices_base_r, row_r, w2)		
 	mov	x3,	xzr
 	bl	calculateFrequency
 	fmov	frequency_dr,	d0	
@@ -359,9 +416,7 @@ sorting_inner_body:
 	mov	x0,	table_base_r
 	mov	x1,	n_r
 	add	row_r,	row_r,	1
-	lsl	offset_r,	row_r,		2		// offset = row * 4
-	sub	offset_r,	xzr,		offset_r	// negate offset	
-	ldr	w2,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+	load_int_from_array1d(indices_base_r, row_r, w2)		
 	mov	x3,	xzr
 	bl	calculateFrequency
 	fmov	nextfrequency_dr,	d0	
@@ -535,12 +590,8 @@ calculateFrequency:
 	scvtf	d10,	x10
 
 	// calculate offset = ( row * numcols + col ) * 4
-	mul	offset_r,	row_r,		n_r		// offset = row * numcols
-	add	offset_r,	offset_r,	col_r		// offset += col
-	lsl	offset_r,	offset_r,	2		// offset *= 4
-	sub	offset_r,	xzr,		offset_r	// negate offset
+	load_int_from_array2d(table_base_r, row_r, col_r, n_r, randNum_r)	
 
-	ldr	randNum_r,	[table_base_r,	offset_r]	// load occurence
 	scvtf	occurence_dr,	randNum_r			// convert occurence to double
 	
 	fmul	occurence_dr,	occurence_dr,	d10		// multiply occurence with 100

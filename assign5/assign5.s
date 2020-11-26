@@ -39,6 +39,25 @@
 
 
 
+// macro for loading an integer value from a 1D array into a given register
+// load_int_from_array1d(&array_r, x27, value_wr)
+// &array_r - base address of a 1D array in memory
+// x27 - greater than or equal to 0
+// value_wr - 32-bit register that will contain the value in the 1D array at given row
+
+// macro for storing an integer value into a 1D array
+// store_int_from_array1d(&array_r, x27, value_wr)
+// &array_r - base address of a 1D array in memory
+// x27 - greater than or equal to 0
+// value_wr - 32-bit register that will contain the value in the 1D array at given row
+
+// macro for loading an integer value from a 2D array into a given register
+// load_int_from_array2d(&array_r, x27, x28, numcols_r, value_wr) 
+
+// macro for storing an integer value into a 2D array
+// store_int_from_array2d(&array_r, x27, x28, numcols_r, value_wr) 
+
+
 
 TABLE_ELEMENT_SIZE = 4
 table_s = 0
@@ -316,14 +335,24 @@ display:
 
 displayloop:
 
-	ldr	w25,	[x26, x24]		// load table cell value at offset
+	
+	// x27 is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	x27,	xzr,	x27	// negate row
+	mul	x27,	x27,	x20	// row = row * numcols
+	sub	x27,	x27,	x28	// row -= col
+	ldr	w25,	[x26, x27, LSL 2] // load value from array
+	add 	x27,	x27,	x28	// row += col
+	sdiv	x27,	x27,	x20	// row /= numcols
+	sub	x27,	xzr,	x27	// make row positive again
+	// row is now positive and restored
+	
+	
 
 	// print occurence at current table cell
 	ldr	x0,	=theD			// load string format and use as argument for printing
 	mov	w1,	w25		// use loaded table cell value as argument for printing
 	bl	printf
-
-	sub     x24,       x24,       TABLE_ELEMENT_SIZE	// decrement offset by table element size
 
 inc_col:
 	add	x28,		x28,		1			// increment column number to keep track of current table cell column
@@ -416,9 +445,12 @@ sorting_inner_body:
 	// get frequency(row, col)
 	mov	x0,	x26
 	mov	x1,	x20
-	lsl	x24,	x27,		2		// offset = row * 4
-	sub	x24,	xzr,		x24	// negate offset	
-	ldr	w2,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w2,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+		
 	mov	x3,	xzr
 	bl	calculateFrequency
 	fmov	d9,	d0	
@@ -427,9 +459,12 @@ sorting_inner_body:
 	mov	x0,	x26
 	mov	x1,	x20
 	add	x27,	x27,	1
-	lsl	x24,	x27,		2		// offset = row * 4
-	sub	x24,	xzr,		x24	// negate offset	
-	ldr	w2,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w2,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+		
 	mov	x3,	xzr
 	bl	calculateFrequency
 	fmov	d10,	d0	
@@ -713,12 +748,27 @@ calculateFrequency:
 	scvtf	d10,	x10
 
 	// calculate offset = ( row * numcols + col ) * 4
-	mul	x24,	x27,		x20		// offset = row * numcols
-	add	x24,	x24,	x28		// offset += col
-	lsl	x24,	x24,	2		// offset *= 4
-	sub	x24,	xzr,		x24	// negate offset
+	//mul	x24,	x27,		x20		// offset = row * numcols
+	//add	x24,	x24,	x28		// offset += col
+	//lsl	x24,	x24,	2		// offset *= 4
+	//sub	x24,	xzr,		x24	// negate offset
 
-	ldr	w25,	[x26,	x24]	// load occurence
+	//ldr	w25,	[x26,	x24]	// load occurence
+	
+	
+	// x27 is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	x27,	xzr,	x27	// negate row
+	mul	x27,	x27,	x20	// row = row * numcols
+	sub	x27,	x27,	x28	// row -= col
+	ldr	w25,	[x26, x27, LSL 2] // load value from array
+	add 	x27,	x27,	x28	// row += col
+	sdiv	x27,	x27,	x20	// row /= numcols
+	sub	x27,	xzr,	x27	// make row positive again
+	// row is now positive and restored
+	
+	
+
 	scvtf	d11,	w25			// convert occurence to double
 	
 	fmul	d11,	d11,	d10		// multiply occurence with 100
