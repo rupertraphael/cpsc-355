@@ -8,8 +8,8 @@
 	theD: 		.string "%-6d"
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
-	header: 	.string	"Document\tHighest Frequency\tWord\tOccurence"
-	struct:		.string "%5d\t%25d\t%4d\t%9d"
+	header: 	.string	"Document\tWord\tOccurences\tFrequency"
+	rowinfo:	.string "%5d\t%25d\t%4d\t%9.3f"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
 
@@ -408,7 +408,7 @@ sorting_outer_test:
 	b.ne	sorting_outer_loop
 	
 	mov	row_r,		xzr
-display_docs:
+display_topdocs:
 	lsl	offset_r,	row_r,		2		// offset = row * 4
 	sub	offset_r,	xzr,		offset_r	// negate offset	
 	ldr	temprow_r,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
@@ -419,15 +419,21 @@ display_docs:
 	mov	x1,	n_r
 	mov	x3,	xzr
 	bl	calculateFrequency
-	fmov	d1,	d0	
+	fmov	d4,	d0	
 
-	ldr	x0,	=testfloat
+	mov	x1,	row_r
+	mov	x2,	col_r
+	mov	x3,	xzr
+	ldr	x0,	=rowinfo
+	bl	printf
+	
+	ldr	x0,	=linebreak
 	bl	printf
 
 	add	row_r,		row_r,		1
 
 	cmp	row_r,		numtoretrieve_r
-	b.lt	display_docs
+	b.lt	display_topdocs
 
 	ldr_x()
 
