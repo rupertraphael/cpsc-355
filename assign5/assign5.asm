@@ -428,26 +428,18 @@ sorting_inner_loop_swap:
 	sub	row_r,	row_r, 1
 	
 	// tempRow = indices[row]
-	lsl	offset_r,	row_r,		2		// offset = row * 4
-	sub	offset_r,	xzr,		offset_r	// negate offset	
-	ldr	temprow_r,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+	load_int_from_array1d(indices_base_r, row_r, temprow_r)
 
 	add	row_r,	row_r, 1
 
 	// indices[row] = indices[row + 1]	
-	lsl	offset_r,	row_r,		2		// offset = row * 4
-	sub	offset_r,	xzr,		offset_r	// negate offset	
-	ldr	nextrow_r,	[indices_base_r, offset_r]	// offset = indices[row + 1] which is one of the m row indices
+	load_int_from_array1d(indices_base_r, row_r, nextrow_r)
 	sub	row_r,	row_r, 1
-	lsl	offset_r,	row_r,		2		// offset = row * 4
-	sub	offset_r,	xzr,		offset_r	// negate offset	
-	str	nextrow_r,	[indices_base_r, offset_r]	// indices[row] = indices[row + 1]		
+	store_int_from_array1d(indices_base_r, row_r, nextrow_r)
 
 	// indices[row + 1] = tempRow
 	add	row_r,	row_r, 1
-	lsl	offset_r,	row_r,		2		// offset = row * 4
-	sub	offset_r,	xzr,		offset_r	// negate offset	
-	str	temprow_r,	[indices_base_r, offset_r]	// indices[row + 1] = tempRow
+	store_int_from_array1d(indices_base_r, row_r, temprow_r)
 
 	mov	swapped_r,	1
 
@@ -464,9 +456,7 @@ sorting_outer_test:
 	
 	mov	row_r,		xzr
 display_topdocs:
-	lsl	offset_r,	row_r,		2		// offset = row * 4
-	sub	offset_r,	xzr,		offset_r	// negate offset	
-	ldr	temprow_r,	[indices_base_r, offset_r]	// offset = indices[row] which is one of the m row indices
+	load_int_from_array1d(indices_base_r, row_r, temprow_r)
 	mov	w2,	temprow_r
 	
 	// get frequency(row, col)
@@ -478,7 +468,7 @@ display_topdocs:
 
 	mov	x1,	row_r
 	mov	x2,	col_r
-	mov	x3,	xzr
+	load_int_from_array2d(table_base_r, row_r, col_r, n_r, w3)	
 	ldr	x0,	=rowinfo
 	bl	printf
 	
@@ -544,11 +534,7 @@ calculateSize:
 	mov	col_r,		xzr		// start at col 0
 size_loop:
 	// calculate offset = ( row * numcols + col ) * 4
-	mul	offset_r,	row_r,		n_r		// offset = row * numcols
-	add	offset_r,	offset_r,	col_r		// offset += col
-	lsl	offset_r,	offset_r,	2		// offset *= 4
-	sub	offset_r,	xzr,		offset_r	// negate offset
-	ldr	randNum_r,	[table_base_r, offset_r]	// load occurence from table at given row and column	
+	load_int_from_array2d(table_base_r, row_r, col_r, n_r, randNum_r)	
 	add	total_r,	total_r,	randNum_r	// add occurence to total to eventually get size
 	
 	add	col_r,		col_r,		1		// next column

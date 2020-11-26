@@ -476,26 +476,47 @@ sorting_inner_loop_swap:
 	sub	x27,	x27, 1
 	
 	// tempRow = indices[row]
-	lsl	x24,	x27,		2		// offset = row * 4
-	sub	x24,	xzr,		x24	// negate offset	
-	ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+	//lsl	x24,	x27,		2		// offset = row * 4
+	//sub	x24,	xzr,		x24	// negate offset	
+	//ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
 
 	add	x27,	x27, 1
 
 	// indices[row] = indices[row + 1]	
-	lsl	x24,	x27,		2		// offset = row * 4
-	sub	x24,	xzr,		x24	// negate offset	
-	ldr	w14,	[x23, x24]	// offset = indices[row + 1] which is one of the m row indices
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w14,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
 	sub	x27,	x27, 1
-	lsl	x24,	x27,		2		// offset = row * 4
-	sub	x24,	xzr,		x24	// negate offset	
-	str	w14,	[x23, x24]	// indices[row] = indices[row + 1]		
+//	lsl	x24,	x27,		2		// offset = row * 4
+//	sub	x24,	xzr,		x24	// negate offset	
+//	str	w14,	[x23, x24]	// indices[row] = indices[row + 1]		
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	str	w14,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
 
 	// indices[row + 1] = tempRow
 	add	x27,	x27, 1
-	lsl	x24,	x27,		2		// offset = row * 4
-	sub	x24,	xzr,		x24	// negate offset	
-	str	w10,	[x23, x24]	// indices[row + 1] = tempRow
+//	lsl	x24,	x27,		2		// offset = row * 4
+//	sub	x24,	xzr,		x24	// negate offset	
+//	str	w10,	[x23, x24]	// indices[row + 1] = tempRow
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	str	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
 
 	mov	x21,	1
 
@@ -512,9 +533,15 @@ sorting_outer_test:
 	
 	mov	x27,		xzr
 display_topdocs:
-	lsl	x24,	x27,		2		// offset = row * 4
-	sub	x24,	xzr,		x24	// negate offset	
-	ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+	//lsl	x24,	x27,		2		// offset = row * 4
+	//sub	x24,	xzr,		x24	// negate offset	
+	//ldr	w10,	[x23, x24]	// offset = indices[row] which is one of the m row indices
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
 	mov	w2,	w10
 	
 	// get frequency(row, col)
@@ -526,7 +553,19 @@ display_topdocs:
 
 	mov	x1,	x27
 	mov	x2,	x28
-	mov	x3,	xzr
+	
+	// x27 is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	x27,	xzr,	x27	// negate row
+	mul	x27,	x27,	x20	// row = row * numcols
+	sub	x27,	x27,	x28	// row -= col
+	ldr	w3,	[x26, x27, LSL 2] // load value from array
+	add 	x27,	x27,	x28	// row += col
+	sdiv	x27,	x27,	x20	// row /= numcols
+	sub	x27,	xzr,	x27	// make row positive again
+	// row is now positive and restored
+	
+	
 	ldr	x0,	=rowinfo
 	bl	printf
 	
@@ -648,11 +687,19 @@ calculateSize:
 	mov	x28,		xzr		// start at col 0
 size_loop:
 	// calculate offset = ( row * numcols + col ) * 4
-	mul	x24,	x27,		x20		// offset = row * numcols
-	add	x24,	x24,	x28		// offset += col
-	lsl	x24,	x24,	2		// offset *= 4
-	sub	x24,	xzr,		x24	// negate offset
-	ldr	w25,	[x26, x24]	// load occurence from table at given row and column	
+	
+	// x27 is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	x27,	xzr,	x27	// negate row
+	mul	x27,	x27,	x20	// row = row * numcols
+	sub	x27,	x27,	x28	// row -= col
+	ldr	w25,	[x26, x27, LSL 2] // load value from array
+	add 	x27,	x27,	x28	// row += col
+	sdiv	x27,	x27,	x20	// row /= numcols
+	sub	x27,	xzr,	x27	// make row positive again
+	// row is now positive and restored
+	
+	
 	add	w9,	w9,	w25	// add occurence to total to eventually get size
 	
 	add	x28,		x28,		1		// next column
@@ -748,13 +795,6 @@ calculateFrequency:
 	scvtf	d10,	x10
 
 	// calculate offset = ( row * numcols + col ) * 4
-	//mul	x24,	x27,		x20		// offset = row * numcols
-	//add	x24,	x24,	x28		// offset += col
-	//lsl	x24,	x24,	2		// offset *= 4
-	//sub	x24,	xzr,		x24	// negate offset
-
-	//ldr	w25,	[x26,	x24]	// load occurence
-	
 	
 	// x27 is gonna be used an offset for loading int value from memory
 	// offset = (row * numcols + col) * 4
