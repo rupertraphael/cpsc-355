@@ -6,6 +6,7 @@
 
 	.text
 	theD: 		.string "%d"
+	theS:		.string "%s\n"
 	cell:		.string "%-6d"
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
@@ -23,6 +24,7 @@
 	// number of bytes needed to allocate for table		
 	// number of cells n*m
 		// current cell
+		// file descriptor
 		// offset to get a table cell's address
 	// number of top docs to retrieve
 	// number of bytes needed to allocate for the indices array
@@ -73,20 +75,49 @@ MAX_RAND = 16 - 1
 
 main:	
 	
-	stp	x29,	x30,	[sp, -16]!
+	stp	x29,	x30,	[sp, -32]!
 	mov	x29,	sp
 	
 
 
-	mov	x9,	3	// exact number of args
-	cmp	x0,	x9	// if not equal,
-	b.ne	invalidargs	// prompt invalid args and exit
+	cmp	x0,	3	// if argc < 3,
+	b.lt	invalidargs	// prompt invalid args and exit
 
-	ldr	x0, [x1, 8]	// load second argument to x0
-	ldr	x20, [x1, 16]	// load third argument into register for number of columns
+	cmp	x0,	4	// if argc > 4	
+	b.gt	invalidargs	// prompt invalid args and exit
+
+	ldr	x19, 	[x1, 8]		// load second argument to x0
+	ldr	x20, 	[x1, 16]	// load third argument into register for number of columns
+	mov	w23,	wzr		// initialize file descriptor to 0
+
+store_filenamepointer:
+	cmp	x0,	3
+	b.eq	store_args
+
+	// open file
+        mov     w0,     -100
+	ldr	x1,	[x1, 24]
+        mov     w2,     wzr
+        mov     x8,     56
+        svc     0
+        cmp     w0,     0
+	mov	w23,	w0
+        b.le    close_file
+	b	store_args
+
+close_file:
+        // close file
+        mov     w0,     w23
+        mov     x8,     57
+        svc     0
+        //ldr     x0,     =error
+        //bl      printf
+        b       invalidargs
+
+store_args:
+	mov	x0,	x19
 	bl	atoi		// convert second argument into int
 	mov	x19,	x0	// second argument is number of rows
-
 	
 	mov	x0,	x20	// set third command line arg as first argument for atoi
 	bl 	atoi		// convert to int
@@ -129,6 +160,7 @@ main:
 	add	x0,	x29,	table_s				// first arg is table's base address	
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
+	mov	w3,	w23					// fourth arg is file descriptor
 	bl	initialize
 
 	
@@ -190,7 +222,7 @@ invalidargs:
 
 exitMain:	
 	
-	ldp	x29,	x30,	[sp], 16
+	ldp	x29,	x30,	[sp], 32
 	ret
 	
 
@@ -211,6 +243,7 @@ exitMain:
 // Ideally should be used before restoring frame pointer and stack pointer and returning.
 
 
+
 alloc = -(16 + 8 * 9) & -16
 	dealloc = -alloc
 
@@ -226,7 +259,12 @@ alloc = -(16 + 8 * 9) & -16
 	x28_s = x27_s + 8
 
 
-// initialize(&table, numrows, numcols)
+buf_size = 4
+buf_s = dealloc + 8
+alloc = (alloc - buf_size) & -16 
+dealloc = -alloc
+
+// initialize(&table, numrows, numcols, fd)
 // populates random occurences (0 - 15) into the given table
 initialize:
 	
@@ -247,13 +285,69 @@ initialize:
 	str	x28,	[x29, x28_s]
 		// store caller-saved register values
 
-	mov	x26,	x0	// get table base address from given arguments	
+	str	xzr,	[x29, buf_s]
 
-	mul	x22,		x1,	x2	 // calculate number of cells the table has
+	mov	x26,	x0	// get table base address from given arguments	
+	mov	x19,		x1
+	mov	x20,		x2
+	mov	w23,		w3
+
+	cmp	w23,		0
+	b.eq	initialize_with_rand
+
+	mov	x27,		xzr
+initialize_with_file:
+	b	initialize_with_file_test
+initialize_with_file_col:
+
+	mov     w0,    w23
+        add     x1,    x29,    buf_s
+        mov     x2,     1
+        mov     x8,     63
+        svc     0
+
+	add	x0,	x29,	buf_s
+	bl	atoi
+	
+	// x27 is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	x27,	xzr,	x27	// negate row
+	mul	x27,	x27,	x20	// row = row * numcols
+	sub	x27,	x27,	x28	// row -= col
+	str	w0,	[x26, x27, LSL 2] // store value into array
+	add 	x27,	x27,	x28	// row += col
+	sdiv	x27,	x27,	x20	// row /= numcols
+	sub	x27,	xzr,	x27	// make row positive again
+	// row is now positive and restored
+	
+ 
+
+	// skip space	
+	mov     w0,    w23
+        add     x1,    x29,    buf_s
+        mov     x2,     1
+        mov     x8,     63
+        svc     0
+
+	add	x28,		x28,		1	
+	cmp	x28,		x20
+	b.lt	initialize_with_file_col
+
+	add	x27,		x27,		1
+initialize_with_file_test:
+	mov	x28,		xzr
+	cmp	x27,		x19
+	b.lt	initialize_with_file_col
+
+	b	end_initialize
+
+initialize_with_rand:
+	mul	x22,		x19,	x20	 // calculate number of cells the table has
 	
 	mov	x24,	xzr		// start offset for table base address at 0
 	mov	x23,		xzr		// start at cell 0 
-loop:
+
+initialize_with_rand_loop:
 	// Store random numbers in each table cell
 	// First, we generate the random number
 	mov	w0,	0
@@ -268,8 +362,9 @@ loop:
 
 	// Loop until current cell number = number of cells
 	cmp	x23,		x22		
-	b.lt	loop
+	b.lt	initialize_with_rand_loop
 	
+end_initialize:
 	ldr	x19,	[x29, x19_s]
 	ldr	x20,	[x29, x20_s]
 	ldr	x21,	[x29, x21_s]
