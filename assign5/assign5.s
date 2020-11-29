@@ -11,10 +11,9 @@
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
-	log_header:	.string "doc,word,occur,freq"
 	askcolumn:	.string	"Which word? "
 	askretrieve:	.string	"How many documents do you want to retrieve? "
-	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
+	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f\n"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
 	space:		.string " "
@@ -751,9 +750,6 @@ display_topdocs:
 	mov	w3,	w10	
 	ldr	x0,	=rowinfo
 	bl	printf
-	
-	ldr	x0,	=linebreak
-	bl	printf
 
 	add	x27,		x27,		1
 
@@ -1043,11 +1039,15 @@ buf_size = 4
 scol_size = 4
 ndocs_size = 4
 pointer_indices_size = 8
+stringbuf_size = 50
+fd_size = 4
 buf_s = dealloc + 8
 scol_s = buf_s + 4
 ndocs_s = scol_s + 4 
 pointer_indices_s = ndocs_s + ndocs_size
-alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size) & -16 
+fd_s = pointer_indices_s + pointer_indices_size
+stringbuf_s = fd_s + fd_size
+alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size - fd_size - stringbuf_size) & -16 
 dealloc = -alloc
 
 
@@ -1080,11 +1080,10 @@ logToFile:
 	mov	w28,			w4
 	mov	x23,		x5
 
-store_variables:
 	// store variables
 	str	w25,	[x29, ndocs_s] 	
 	str	w28,			[x29, scol_s]	
-	str	x23,			[x29, pointer_indices_s]
+	str	x23,		[x29, pointer_indices_s]
 
 	// open log file
 	mov     w0,     -100
@@ -1094,6 +1093,7 @@ store_variables:
         mov     x8,     56
         svc     0
 	mov	w23,	w0		// remember file descriptor	
+	str	w23,	[x29, fd_s]
 
 	mov	x27,	xzr
 	mov	x28,	xzr
@@ -1260,9 +1260,87 @@ log_numtoretrieve:
 
 log_topheader:
 	// write header
+	
+	mov	w0,	w23	
+	ldr	x1,	=header
+	mov	x2,	36
+	mov	x8,	64
+	svc 	0
+	
+	
 
 	mov	x27,		xzr
-	ldr	w28,		[x29, scol_s]
+log_topdocs:
+	b	log_topdocs_test
+
+log_topdocs_body:
+			
+	ldr	w28,		[x29, scol_s]		// load word being searched
+
+	ldr	x23,	[x29, pointer_indices_s]
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
+	mov	w2,	w10
+	
+	// get frequency(row, col)
+	mov	x0,	x26
+	mov	x1,	x20
+	mov	x3,	x28
+	bl	calculateFrequency
+	fmov	d4,	d0	
+
+	ldr	x23,	[x29, pointer_indices_s]
+		
+	sub	x27,	xzr,	x27		// make row negative so that offset is negative
+	ldr	w10,	[x23, x27, LSL 2] 	// load value in memory into given register 
+	sub	x27,	xzr,	x27		// make row positive again
+	
+
+	mov	x2,	xzr
+	add	x2,	x2,	w10, UXTW
+	mov	x3,	x28
+load_occurence:
+	
+	// x27 is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	x2,	xzr,	x2	// negate row
+	mul	x2,	x2,	x20	// row = row * numcols
+	sub	x2,	x2,	x28	// row -= col
+	ldr	w10,	[x26, x2, LSL 2] // load value from array
+	add 	x2,	x2,	x28	// row += col
+	sdiv	x2,	x2,	x20	// row /= numcols
+	sub	x2,	xzr,	x2	// make row positive again
+	// row is now positive and restored
+	
+      
+start_sprint:
+	mov	w4,	w10	
+	ldr	x1,	=rowinfo
+	mov	x0,	xzr
+	add	x0,	x29,	stringbuf_s
+	bl	sprintf
+
+after_sprint:
+	ldr	w23,	[x29, fd_s]
+	
+	mov	w0,	w23	
+	add	x1,	x29,	 stringbuf_s
+	mov	x2,	40
+	mov	x8,	64
+	svc 	0
+	
+
+
+	add	x27,	x27,	1 		
+
+log_topdocs_test:
+	ldr	w25,	[x29, ndocs_s]
+	cmp	x27,		w25, UXTW	
+	b.lt	log_topdocs_body
 
 log_close_file:
 	// close file

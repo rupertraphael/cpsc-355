@@ -11,10 +11,9 @@
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
-	log_header:	.string "doc,word,occur,freq"
 	askcolumn:	.string	"Which word? "
 	askretrieve:	.string	"How many documents do you want to retrieve? "
-	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
+	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f\n"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
 	space:		.string " "
@@ -610,9 +609,6 @@ display_topdocs:
 	mov	w3,	temprow_r	
 	ldr	x0,	=rowinfo
 	bl	printf
-	
-	ldr	x0,	=linebreak
-	bl	printf
 
 	add	row_r,		row_r,		1
 
@@ -775,11 +771,15 @@ buf_size = 4
 scol_size = 4
 ndocs_size = 4
 pointer_indices_size = 8
+stringbuf_size = 50
+fd_size = 4
 buf_s = dealloc + 8
 scol_s = buf_s + 4
 ndocs_s = scol_s + 4 
 pointer_indices_s = ndocs_s + ndocs_size
-alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size) & -16 
+fd_s = pointer_indices_s + pointer_indices_size
+stringbuf_s = fd_s + fd_size
+alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size - fd_size - stringbuf_size) & -16 
 dealloc = -alloc
 
 define(numtoretrieve_wr, w25)
@@ -798,11 +798,10 @@ logToFile:
 	mov	col_wr,			w4
 	mov	indices_base_r,		x5
 
-store_variables:
 	// store variables
 	str	numtoretrieve_wr,	[x29, ndocs_s] 	
 	str	col_wr,			[x29, scol_s]	
-	str	indices_base_r,			[x29, pointer_indices_s]
+	str	indices_base_r,		[x29, pointer_indices_s]
 
 	// open log file
 	mov     w0,     -100
@@ -812,6 +811,7 @@ store_variables:
         mov     x8,     56
         svc     0
 	mov	fd_wr,	w0		// remember file descriptor	
+	str	fd_wr,	[x29, fd_s]
 
 	mov	row_r,	xzr
 	mov	col_r,	xzr
@@ -871,9 +871,51 @@ log_numtoretrieve:
 
 log_topheader:
 	// write header
+	fwrite_var(fd_wr, header, 36)	
 
 	mov	row_r,		xzr
-	ldr	col_wr,		[x29, scol_s]
+log_topdocs:
+	b	log_topdocs_test
+
+log_topdocs_body:
+			
+	ldr	col_wr,		[x29, scol_s]		// load word being searched
+
+	ldr	indices_base_r,	[x29, pointer_indices_s]
+	load_int_from_array1d(indices_base_r, row_r, temprow_r)
+	mov	w2,	temprow_r
+	
+	// get frequency(row, col)
+	mov	x0,	table_base_r
+	mov	x1,	n_r
+	mov	x3,	col_r
+	bl	calculateFrequency
+	fmov	d4,	d0	
+
+	ldr	indices_base_r,	[x29, pointer_indices_s]
+	load_int_from_array1d(indices_base_r, row_r, temprow_r)
+	mov	x2,	xzr
+	add	x2,	x2,	temprow_r, UXTW
+	mov	x3,	col_r
+load_occurence:
+	load_int_from_array2d(table_base_r, x2, col_r, n_r, temprow_r)
+start_sprint:
+	mov	w4,	temprow_r	
+	ldr	x1,	=rowinfo
+	mov	x0,	xzr
+	add	x0,	x29,	stringbuf_s
+	bl	sprintf
+
+after_sprint:
+	ldr	fd_wr,	[x29, fd_s]
+	fwrite_reg(fd_wr, x29, stringbuf_s, 40)
+
+	add	row_r,	row_r,	1 		
+
+log_topdocs_test:
+	ldr	numtoretrieve_wr,	[x29, ndocs_s]
+	cmp	row_r,		numtoretrieve_wr, UXTW	
+	b.lt	log_topdocs_body
 
 log_close_file:
 	// close file
