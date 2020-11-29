@@ -1095,6 +1095,8 @@ store_variables:
         svc     0
 	mov	w23,	w0		// remember file descriptor	
 
+	mov	x27,	xzr
+	mov	x28,	xzr
 log_table:
 	
 	// x27 is gonna be used an offset for loading int value from memory

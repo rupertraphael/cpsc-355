@@ -813,6 +813,8 @@ store_variables:
         svc     0
 	mov	fd_wr,	w0		// remember file descriptor	
 
+	mov	row_r,	xzr
+	mov	col_r,	xzr
 log_table:
 	load_int_from_array2d(table_base_r, row_r, col_r, n_r, randNum_r)	
 
