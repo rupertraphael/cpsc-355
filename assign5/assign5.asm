@@ -11,11 +11,15 @@
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
-	askcolumn:	.string	"Which word?"
-	askretrieve:	.string	"How many documents do you want to retrieve?"
+	log_header:	.string "doc,word,occur,freq"
+	askcolumn:	.string	"Which word? "
+	askretrieve:	.string	"How many documents do you want to retrieve? "
 	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
+	space:		.string " "
+	comma:		.string ","
+	logfile:	.string "assign5.log"
 
 
 				// Eventually, registers for:
@@ -99,24 +103,24 @@ define(
 	sub	$2,	xzr,	$2	// make row positive again
 	// row is now positive and restored
 	'
-)
+      )
 // macro for storing an integer value into a 2D array
 // store_int_from_array2d(&array_r, row_r, col_r, numcols_r, value_wr) 
 define(
-	store_int_from_array2d,
-	`
-	// row_r is gonna be used an offset for loading int value from memory
-	// offset = (row * numcols + col) * 4
-	sub	$2,	xzr,	$2	// negate row
-	mul	$2,	$2,	$4	// row = row * numcols
-	sub	$2,	$2,	$3	// row -= col
-	str	$5,	[$1, $2, LSL 2] // store value into array
-	add 	$2,	$2,	$3	// row += col
-	sdiv	$2,	$2,	$4	// row /= numcols
-	sub	$2,	xzr,	$2	// make row positive again
-	// row is now positive and restored
-	'
-)
+		store_int_from_array2d,
+		`
+		// row_r is gonna be used an offset for loading int value from memory
+		// offset = (row * numcols + col) * 4
+		sub	$2,	xzr,	$2	// negate row
+		mul	$2,	$2,	$4	// row = row * numcols
+		sub	$2,	$2,	$3	// row -= col
+		str	$5,	[$1, $2, LSL 2] // store value into array
+		add 	$2,	$2,	$3	// row += col
+		sdiv	$2,	$2,	$4	// row /= numcols
+		sub	$2,	xzr,	$2	// make row positive again
+		// row is now positive and restored
+		'
+      )
 
 
 TABLE_ELEMENT_SIZE = 4
@@ -124,11 +128,11 @@ table_s = 0
 ALIGN = -16
 MAX_RAND = 16 - 1
 
-	.balign 4
-	.global main
+.balign 4
+.global main
 
 main:	
-	startfunction(-32)
+startfunction(-32)
 
 	cmp	x0,	3	// if argc < 3,
 	b.lt	invalidargs	// prompt invalid args and exit
@@ -140,41 +144,41 @@ main:
 	ldr	n_r, 	[x1, 16]	// load third argument into register for number of columns
 	mov	fd_wr,	wzr		// initialize file descriptor to 0
 
-store_filenamepointer:
+	store_filenamepointer:
 	cmp	x0,	3
 	b.eq	store_args
 
 	// open file
-        mov     w0,     -100
+	mov     w0,     -100
 	ldr	x1,	[x1, 24]
-        mov     w2,     wzr
-        mov     x8,     56
-        svc     0
-        cmp     w0,     0
+	mov     w2,     wzr
+	mov     x8,     56
+	svc     0
+	cmp     w0,     0
 	mov	fd_wr,	w0
-        b.le    close_file
+	b.le    close_file
 	b	store_args
 
-close_file:
-        // close file
-        mov     w0,     fd_wr
-        mov     x8,     57
-        svc     0
-        //ldr     x0,     =error
-        //bl      printf
-        b       invalidargs
+	close_file:
+	// close file
+	mov     w0,     fd_wr
+	mov     x8,     57
+	svc     0
+	//ldr     x0,     =error
+	//bl      printf
+	b       invalidargs
 
-store_args:
+	store_args:
 	mov	x0,	m_r
 	bl	atoi		// convert second argument into int
 	mov	m_r,	x0	// second argument is number of rows
-	
+
 	mov	x0,	n_r	// set third command line arg as first argument for atoi
 	bl 	atoi		// convert to int
 	mov	n_r,	x0	// third command line argument is number of columns
 
 	mov	x9,	4	// minimum number of rows/columns
-	mov	x10,	16	// maximum number of rows/columns
+	mov	x10,	20	// maximum number of rows/columns
 	cmp	m_r,	x9	// if less than minimum number of rows,
 	b.lt	invalidargs	// prompt invalid args and exit
 	cmp	m_r,	x10	// if more than max number of rows,
@@ -213,7 +217,7 @@ store_args:
 	mov	w3,	fd_wr					// fourth arg is file descriptor
 	bl	initialize
 
-	
+
 	add	x0,	x29,	table_s				// first arg is table's base address	
 	mov	x1,	m_r					// second arg is number of rows
 	mov	x2,	n_r					// third arg is number of cols
@@ -227,9 +231,9 @@ store_args:
 	bl	printf
 
 	ldr	x0,	=theD
-	ldr	x1,	=varN
+	ldr	x1,	=col_i
 	bl	scanf
-	ldr	x3,	=varN
+	ldr	x3,	=col_i
 	ldr	col_r,	[x3]
 
 	// Ask for number of docs to retrieve
@@ -237,17 +241,26 @@ store_args:
 	bl	printf
 
 	ldr	x0,	=theD
-	ldr	x1,	=varN
+	ldr	x1,	=num_docs
 	bl	scanf
-	ldr	x4,	=varN
-	ldr	x4,	[x4]
+	ldr	x4,	=num_docs
+	ldr	numtoretrieve_r,	[x4]
 	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	m_r					// second arg is number of rows
 	mov	x2,	n_r					// third arg is number of cols
 	mov	x3,	col_r
+	mov	x4,	numtoretrieve_r
 	add	x5,	x29,	table_alloc_r			// fifth arg is indices array base address
 	bl	topRelevantDocs
+
+	add	x0,	x29,	table_s				// first arg is table's base address
+	mov	x1,	m_r					// second arg is number of rows
+	mov	x2,	n_r					// third arg is number of cols
+	mov	x3,	numtoretrieve_r
+	mov	x4,	col_r
+	add	x5,	x29,	table_alloc_r			// fifth arg is indices array base address
+	bl	logToFile
 
 	// Calculate required space for table
 	// number of bytes allocated for table = 4 * m * n
@@ -415,6 +428,7 @@ end_initialize:
 
 	endfunction(dealloc)
 
+init_subr_x()
 define(divisor_r, w19)
 define(numerator_r, w20)
 define(min_r, w21)
@@ -438,6 +452,7 @@ randomNum:
 	ldr_x()				// reload caller-saved register values	
 	endfunction(dealloc)
 
+init_subr_x()
 // display(&table, numrows, numcolumns)
 display: 
 	startfunction(alloc)
@@ -483,6 +498,7 @@ inc_col:
 
 	endfunction(dealloc)
 
+init_subr_x()
 define(swapped_r, x21)
 define(temprow_r, w10)
 define(mless_r, x11)
@@ -607,6 +623,7 @@ display_topdocs:
 
 	endfunction(dealloc)
 
+init_subr_x()
 define(row_wr, w27)		// Register for unsorted row index
 //init_indices(&indices, numrows)
 // generates an unsorted indices array
@@ -677,7 +694,6 @@ alloc = (alloc - 8) & -16 	// will be allocating extra 8 bytes to store the size
 dealloc = -alloc
 size_s = x28_s + 8		// position of size value relative to frame pointer 
 
-init_subr_x()
 define(occurence_dr, d11)
 define(size_dr,	d12)
 // frequency = word occurences in doc * 100 / size of doc
@@ -695,7 +711,7 @@ calculateFrequency:
 	bl 	calculateSize			// calculate size with &table, numcols, row
 	scvtf	size_dr,	x0		// remember size
 
-	mov	x10,	100
+	mov	x10,	1
 	scvtf	d10,	x10
 
 	// calculate offset = ( row * numcols + col ) * 4
@@ -710,5 +726,162 @@ calculateFrequency:
 
 	endfunction(dealloc)
 
+
+define(
+	fwrite_var,
+	`
+	mov	w0,	$1	
+	ldr	x1,	=$2
+	mov	x2,	$3
+	mov	x8,	64
+	svc 	0
+	'
+)
+
+define(
+	fwrite_reg,
+	`
+	mov	w0,	$1	
+	add	x1,	$2,	 $3
+	mov	x2,	$4
+	mov	x8,	64
+	svc 	0
+	'
+)
+
+define(
+	int_to_string,
+	`
+	scvtf	d0,	$1
+	mov	x0,	$2
+	add	x1,	$3,	$4
+	bl	gcvt
+	'
+)
+
+define(
+	float_to_string,
+	`
+	fmov	d0,	$1
+	mov	x0,	$2
+	add	x1,	$3,	$4
+	bl	gcvt
+	'
+)
+
+init_subr_x()
+
+buf_size = 4
+scol_size = 4
+ndocs_size = 4
+pointer_indices_size = 8
+buf_s = dealloc + 8
+scol_s = buf_s + 4
+ndocs_s = scol_s + 4 
+pointer_indices_s = ndocs_s + ndocs_size
+alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size) & -16 
+dealloc = -alloc
+
+define(numtoretrieve_wr, w25)
+define(col_wr, w28)
+
+// logToFile(*table, numrows, numcols, num_docs, col_i)
+logToFile: 
+
+	startfunction(alloc)
+	str_x()	
+
+	mov	table_base_r,		x0
+	mov	m_r,			x1
+	mov	n_r,			x2
+	mov	numtoretrieve_wr,	w3
+	mov	col_wr,			w4
+	mov	indices_base_r,		x5
+
+store_variables:
+	// store variables
+	str	numtoretrieve_wr,	[x29, ndocs_s] 	
+	str	col_wr,			[x29, scol_s]	
+	str	indices_base_r,			[x29, pointer_indices_s]
+
+	// open log file
+	mov     w0,     -100
+        ldr     x1,     =logfile
+        mov     w2,     0101
+	mov	w3,	0700
+        mov     x8,     56
+        svc     0
+	mov	fd_wr,	w0		// remember file descriptor	
+
+log_table:
+	load_int_from_array2d(table_base_r, row_r, col_r, n_r, randNum_r)	
+
+	// convert to string
+	int_to_string(randNum_r, 1, x29, buf_s)
+	// write to file
+	fwrite_reg(fd_wr, x29, buf_s, 1)
+	// write space
+	fwrite_var(fd_wr, space, 1)
+
+log_inc_col:
+	add	col_r,		col_r,		1			// increment column number to keep track of current table cell column
+
+        cmp     col_r,         n_r					// if column < number of columns:
+        b.lt    log_table						// loop
+
+	mov	col_r,	xzr						// reset column to 0
+	
+	add 	row_r,		row_r,		1			// increment row number to keep track of current table cell row
+	
+	fwrite_var(fd_wr, linebreak, 1)
+
+	cmp	row_r,		m_r					// if row < number of rows:
+	b.lt	log_table						// loop
+
+log_search_col:
+	// write question
+	fwrite_var(fd_wr, askcolumn, 11)	
+
+	ldr	col_r,		[x29, scol_s]
+	// convert to string
+	int_to_string(col_wr, 1, x29, buf_s)
+	// write to file
+	fwrite_reg(fd_wr, x29, buf_s, 1)
+	// write space
+	fwrite_var(fd_wr, space, 1)
+
+	fwrite_var(fd_wr, linebreak, 1)
+
+log_numtoretrieve:
+	// write question
+	fwrite_var(fd_wr, askretrieve, 44)	
+
+	ldr	numtoretrieve_wr,	[x29, ndocs_s]
+	// convert to string
+	int_to_string(numtoretrieve_r, 4, x29, buf_s)
+	// write to file
+	// write to file
+	fwrite_reg(fd_wr, x29, buf_s, 4)
+	// write space
+	fwrite_var(fd_wr, space, 1)
+
+	fwrite_var(fd_wr, linebreak, 1)
+
+log_topheader:
+	// write header
+
+	mov	row_r,		xzr
+	ldr	col_wr,		[x29, scol_s]
+
+log_close_file:
+	// close file
+	mov     w0,     fd_wr
+        mov     x8,     57
+        svc     0
+
+	ldr_x()
+	endfunction(dealloc)
+
 	.data
-	varN:		.int	0
+	col_i:		.int	0
+	num_docs:	.int	0

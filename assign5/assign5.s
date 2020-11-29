@@ -11,11 +11,15 @@
 	testint:	.string "%d\n"
 	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
-	askcolumn:	.string	"Which word?"
-	askretrieve:	.string	"How many documents do you want to retrieve?"
+	log_header:	.string "doc,word,occur,freq"
+	askcolumn:	.string	"Which word? "
+	askretrieve:	.string	"How many documents do you want to retrieve? "
 	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
+	space:		.string " "
+	comma:		.string ","
+	logfile:	.string "assign5.log"
 
 
 				// Eventually, registers for:
@@ -70,11 +74,11 @@ table_s = 0
 ALIGN = -16
 MAX_RAND = 16 - 1
 
-	.balign 4
-	.global main
+.balign 4
+.global main
 
 main:	
-	
+
 	stp	x29,	x30,	[sp, -32]!
 	mov	x29,	sp
 	
@@ -90,41 +94,41 @@ main:
 	ldr	x20, 	[x1, 16]	// load third argument into register for number of columns
 	mov	w23,	wzr		// initialize file descriptor to 0
 
-store_filenamepointer:
+	store_filenamepointer:
 	cmp	x0,	3
 	b.eq	store_args
 
 	// open file
-        mov     w0,     -100
+	mov     w0,     -100
 	ldr	x1,	[x1, 24]
-        mov     w2,     wzr
-        mov     x8,     56
-        svc     0
-        cmp     w0,     0
+	mov     w2,     wzr
+	mov     x8,     56
+	svc     0
+	cmp     w0,     0
 	mov	w23,	w0
-        b.le    close_file
+	b.le    close_file
 	b	store_args
 
-close_file:
-        // close file
-        mov     w0,     w23
-        mov     x8,     57
-        svc     0
-        //ldr     x0,     =error
-        //bl      printf
-        b       invalidargs
+	close_file:
+	// close file
+	mov     w0,     w23
+	mov     x8,     57
+	svc     0
+	//ldr     x0,     =error
+	//bl      printf
+	b       invalidargs
 
-store_args:
+	store_args:
 	mov	x0,	x19
 	bl	atoi		// convert second argument into int
 	mov	x19,	x0	// second argument is number of rows
-	
+
 	mov	x0,	x20	// set third command line arg as first argument for atoi
 	bl 	atoi		// convert to int
 	mov	x20,	x0	// third command line argument is number of columns
 
 	mov	x9,	4	// minimum number of rows/columns
-	mov	x10,	16	// maximum number of rows/columns
+	mov	x10,	20	// maximum number of rows/columns
 	cmp	x19,	x9	// if less than minimum number of rows,
 	b.lt	invalidargs	// prompt invalid args and exit
 	cmp	x19,	x10	// if more than max number of rows,
@@ -163,7 +167,7 @@ store_args:
 	mov	w3,	w23					// fourth arg is file descriptor
 	bl	initialize
 
-	
+
 	add	x0,	x29,	table_s				// first arg is table's base address	
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
@@ -177,9 +181,9 @@ store_args:
 	bl	printf
 
 	ldr	x0,	=theD
-	ldr	x1,	=varN
+	ldr	x1,	=col_i
 	bl	scanf
-	ldr	x3,	=varN
+	ldr	x3,	=col_i
 	ldr	x28,	[x3]
 
 	// Ask for number of docs to retrieve
@@ -187,17 +191,26 @@ store_args:
 	bl	printf
 
 	ldr	x0,	=theD
-	ldr	x1,	=varN
+	ldr	x1,	=num_docs
 	bl	scanf
-	ldr	x4,	=varN
-	ldr	x4,	[x4]
+	ldr	x4,	=num_docs
+	ldr	x25,	[x4]
 	
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
 	mov	x3,	x28
+	mov	x4,	x25
 	add	x5,	x29,	x21			// fifth arg is indices array base address
 	bl	topRelevantDocs
+
+	add	x0,	x29,	table_s				// first arg is table's base address
+	mov	x1,	x19					// second arg is number of rows
+	mov	x2,	x20					// third arg is number of cols
+	mov	x3,	x25
+	mov	x4,	x28
+	add	x5,	x29,	x21			// fifth arg is indices array base address
+	bl	logToFile
 
 	// Calculate required space for table
 	// number of bytes allocated for table = 4 * m * n
@@ -309,18 +322,18 @@ initialize_with_file_col:
 	add	x0,	x29,	buf_s
 	bl	atoi
 	
-	// x27 is gonna be used an offset for loading int value from memory
-	// offset = (row * numcols + col) * 4
-	sub	x27,	xzr,	x27	// negate row
-	mul	x27,	x27,	x20	// row = row * numcols
-	sub	x27,	x27,	x28	// row -= col
-	str	w0,	[x26, x27, LSL 2] // store value into array
-	add 	x27,	x27,	x28	// row += col
-	sdiv	x27,	x27,	x20	// row /= numcols
-	sub	x27,	xzr,	x27	// make row positive again
-	// row is now positive and restored
-	
- 
+		// x27 is gonna be used an offset for loading int value from memory
+		// offset = (row * numcols + col) * 4
+		sub	x27,	xzr,	x27	// negate row
+		mul	x27,	x27,	x20	// row = row * numcols
+		sub	x27,	x27,	x28	// row -= col
+		str	w0,	[x26, x27, LSL 2] // store value into array
+		add 	x27,	x27,	x28	// row += col
+		sdiv	x27,	x27,	x20	// row /= numcols
+		sub	x27,	xzr,	x27	// make row positive again
+		// row is now positive and restored
+		
+       
 
 	// skip space	
 	mov     w0,    w23
@@ -383,6 +396,20 @@ end_initialize:
 	
 
 
+alloc = -(16 + 8 * 9) & -16
+	dealloc = -alloc
+
+	x19_s = 16
+	x20_s = x19_s + 8
+	x21_s = x20_s + 8 
+	x22_s = x21_s + 8
+	x23_s = x22_s + 8
+	x24_s = x23_s + 8
+	x25_s = x24_s + 8
+	x26_s = x25_s + 8
+	x27_s = x26_s + 8
+	x28_s = x27_s + 8
+
 
 
 
@@ -434,6 +461,20 @@ randomNum:
 	
 
 
+alloc = -(16 + 8 * 9) & -16
+	dealloc = -alloc
+
+	x19_s = 16
+	x20_s = x19_s + 8
+	x21_s = x20_s + 8 
+	x22_s = x21_s + 8
+	x23_s = x22_s + 8
+	x24_s = x23_s + 8
+	x25_s = x24_s + 8
+	x26_s = x25_s + 8
+	x27_s = x26_s + 8
+	x28_s = x27_s + 8
+
 // display(&table, numrows, numcolumns)
 display: 
 	
@@ -475,7 +516,7 @@ displayloop:
 	sub	x27,	xzr,	x27	// make row positive again
 	// row is now positive and restored
 	
-	
+      	
 
 	// print occurence at current table cell
 	ldr	x0,	=cell			// load string format and use as argument for printing
@@ -518,6 +559,20 @@ inc_col:
 	ret
 	
 
+
+alloc = -(16 + 8 * 9) & -16
+	dealloc = -alloc
+
+	x19_s = 16
+	x20_s = x19_s + 8
+	x21_s = x20_s + 8 
+	x22_s = x21_s + 8
+	x23_s = x22_s + 8
+	x24_s = x23_s + 8
+	x25_s = x24_s + 8
+	x26_s = x25_s + 8
+	x27_s = x26_s + 8
+	x28_s = x27_s + 8
 
 
 
@@ -692,7 +747,7 @@ display_topdocs:
 	sub	x1,	xzr,	x1	// make row positive again
 	// row is now positive and restored
 	
-
+      
 	mov	w3,	w10	
 	ldr	x0,	=rowinfo
 	bl	printf
@@ -722,6 +777,20 @@ display_topdocs:
 	ret
 	
 
+
+alloc = -(16 + 8 * 9) & -16
+	dealloc = -alloc
+
+	x19_s = 16
+	x20_s = x19_s + 8
+	x21_s = x20_s + 8 
+	x22_s = x21_s + 8
+	x23_s = x22_s + 8
+	x24_s = x23_s + 8
+	x25_s = x24_s + 8
+	x26_s = x25_s + 8
+	x27_s = x26_s + 8
+	x28_s = x27_s + 8
 
 		// Register for unsorted row index
 //init_indices(&indices, numrows)
@@ -827,7 +896,7 @@ size_loop:
 	sub	x27,	xzr,	x27	// make row positive again
 	// row is now positive and restored
 	
-	
+      	
 	add	w9,	w9,	w25	// add occurence to total to eventually get size
 	
 	add	x28,		x28,		1		// next column
@@ -874,20 +943,6 @@ alloc = (alloc - 8) & -16 	// will be allocating extra 8 bytes to store the size
 dealloc = -alloc
 size_s = x28_s + 8		// position of size value relative to frame pointer 
 
-alloc = -(16 + 8 * 9) & -16
-	dealloc = -alloc
-
-	x19_s = 16
-	x20_s = x19_s + 8
-	x21_s = x20_s + 8 
-	x22_s = x21_s + 8
-	x23_s = x22_s + 8
-	x24_s = x23_s + 8
-	x25_s = x24_s + 8
-	x26_s = x25_s + 8
-	x27_s = x26_s + 8
-	x28_s = x27_s + 8
-
 
 
 // frequency = word occurences in doc * 100 / size of doc
@@ -919,7 +974,7 @@ calculateFrequency:
 	bl 	calculateSize			// calculate size with &table, numcols, row
 	scvtf	d12,	x0		// remember size
 
-	mov	x10,	100
+	mov	x10,	1
 	scvtf	d10,	x10
 
 	// calculate offset = ( row * numcols + col ) * 4
@@ -935,7 +990,7 @@ calculateFrequency:
 	sub	x27,	xzr,	x27	// make row positive again
 	// row is now positive and restored
 	
-	
+      	
 
 	scvtf	d11,	w25			// convert occurence to double
 	
@@ -960,5 +1015,276 @@ calculateFrequency:
 	
 
 
+
+
+
+
+
+
+
+
+
+alloc = -(16 + 8 * 9) & -16
+	dealloc = -alloc
+
+	x19_s = 16
+	x20_s = x19_s + 8
+	x21_s = x20_s + 8 
+	x22_s = x21_s + 8
+	x23_s = x22_s + 8
+	x24_s = x23_s + 8
+	x25_s = x24_s + 8
+	x26_s = x25_s + 8
+	x27_s = x26_s + 8
+	x28_s = x27_s + 8
+
+
+buf_size = 4
+scol_size = 4
+ndocs_size = 4
+pointer_indices_size = 8
+buf_s = dealloc + 8
+scol_s = buf_s + 4
+ndocs_s = scol_s + 4 
+pointer_indices_s = ndocs_s + ndocs_size
+alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size) & -16 
+dealloc = -alloc
+
+
+
+
+// logToFile(*table, numrows, numcols, num_docs, col_i)
+logToFile: 
+
+	
+	stp	x29,	x30,	[sp, alloc]!
+	mov	x29,	sp
+	
+
+	str	x19,	[x29, x19_s]
+	str	x20,	[x29, x20_s]
+	str	x21,	[x29, x21_s]
+	str	x22,	[x29, x22_s]
+	str	x23,	[x29, x23_s]
+	str	x24,	[x29, x24_s]
+	str	x25,	[x29, x25_s]
+	str	x26,	[x29, x26_s]
+	str	x27,	[x29, x27_s]
+	str	x28,	[x29, x28_s]
+	
+
+	mov	x26,		x0
+	mov	x19,			x1
+	mov	x20,			x2
+	mov	w25,	w3
+	mov	w28,			w4
+	mov	x23,		x5
+
+store_variables:
+	// store variables
+	str	w25,	[x29, ndocs_s] 	
+	str	w28,			[x29, scol_s]	
+	str	x23,			[x29, pointer_indices_s]
+
+	// open log file
+	mov     w0,     -100
+        ldr     x1,     =logfile
+        mov     w2,     0101
+	mov	w3,	0700
+        mov     x8,     56
+        svc     0
+	mov	w23,	w0		// remember file descriptor	
+
+log_table:
+	
+	// x27 is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	x27,	xzr,	x27	// negate row
+	mul	x27,	x27,	x20	// row = row * numcols
+	sub	x27,	x27,	x28	// row -= col
+	ldr	w25,	[x26, x27, LSL 2] // load value from array
+	add 	x27,	x27,	x28	// row += col
+	sdiv	x27,	x27,	x20	// row /= numcols
+	sub	x27,	xzr,	x27	// make row positive again
+	// row is now positive and restored
+	
+      	
+
+	// convert to string
+	
+	scvtf	d0,	w25
+	mov	x0,	1
+	add	x1,	x29,	buf_s
+	bl	gcvt
+	
+
+	// write to file
+	
+	mov	w0,	w23	
+	add	x1,	x29,	 buf_s
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+	// write space
+	
+	mov	w0,	w23	
+	ldr	x1,	=space
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+
+log_inc_col:
+	add	x28,		x28,		1			// increment column number to keep track of current table cell column
+
+        cmp     x28,         x20					// if column < number of columns:
+        b.lt    log_table						// loop
+
+	mov	x28,	xzr						// reset column to 0
+	
+	add 	x27,		x27,		1			// increment row number to keep track of current table cell row
+	
+	
+	mov	w0,	w23	
+	ldr	x1,	=linebreak
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+
+	cmp	x27,		x19					// if row < number of rows:
+	b.lt	log_table						// loop
+
+log_search_col:
+	// write question
+	
+	mov	w0,	w23	
+	ldr	x1,	=askcolumn
+	mov	x2,	11
+	mov	x8,	64
+	svc 	0
+	
+	
+
+	ldr	x28,		[x29, scol_s]
+	// convert to string
+	
+	scvtf	d0,	w28
+	mov	x0,	1
+	add	x1,	x29,	buf_s
+	bl	gcvt
+	
+
+	// write to file
+	
+	mov	w0,	w23	
+	add	x1,	x29,	 buf_s
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+	// write space
+	
+	mov	w0,	w23	
+	ldr	x1,	=space
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+
+	
+	mov	w0,	w23	
+	ldr	x1,	=linebreak
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+
+log_numtoretrieve:
+	// write question
+	
+	mov	w0,	w23	
+	ldr	x1,	=askretrieve
+	mov	x2,	44
+	mov	x8,	64
+	svc 	0
+	
+	
+
+	ldr	w25,	[x29, ndocs_s]
+	// convert to string
+	
+	scvtf	d0,	x25
+	mov	x0,	4
+	add	x1,	x29,	buf_s
+	bl	gcvt
+	
+
+	// write to file
+	// write to file
+	
+	mov	w0,	w23	
+	add	x1,	x29,	 buf_s
+	mov	x2,	4
+	mov	x8,	64
+	svc 	0
+	
+
+	// write space
+	
+	mov	w0,	w23	
+	ldr	x1,	=space
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+
+	
+	mov	w0,	w23	
+	ldr	x1,	=linebreak
+	mov	x2,	1
+	mov	x8,	64
+	svc 	0
+	
+
+
+log_topheader:
+	// write header
+
+	mov	x27,		xzr
+	ldr	w28,		[x29, scol_s]
+
+log_close_file:
+	// close file
+	mov     w0,     w23
+        mov     x8,     57
+        svc     0
+
+	ldr	x19,	[x29, x19_s]
+	ldr	x20,	[x29, x20_s]
+	ldr	x21,	[x29, x21_s]
+	ldr	x22,	[x29, x22_s]
+	ldr	x23,	[x29, x23_s]
+	ldr	x24,	[x29, x24_s]
+	ldr	x25,	[x29, x25_s]
+	ldr	x26,	[x29, x26_s]
+	ldr	x27,	[x29, x27_s]
+	ldr	x28,	[x29, x28_s]
+
+	
+	ldp	x29,	x30,	[sp], dealloc
+	ret
+	
+
+
 	.data
-	varN:		.int	0
+	col_i:		.int	0
+	num_docs:	.int	0
