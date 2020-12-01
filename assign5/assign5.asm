@@ -813,6 +813,14 @@ logToFile:
 	mov	fd_wr,	w0		// remember file descriptor	
 	str	fd_wr,	[x29, fd_s]
 
+	// truncate log file
+	mov     w0,     -100
+        ldr     x1,     =logfile
+        mov     w2,     01000
+        mov     x8,     56
+        svc     0
+
+
 	mov	row_r,	xzr
 	mov	col_r,	xzr
 log_table:

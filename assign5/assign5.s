@@ -1095,6 +1095,14 @@ logToFile:
 	mov	w23,	w0		// remember file descriptor	
 	str	w23,	[x29, fd_s]
 
+	// truncate log file
+	mov     w0,     -100
+        ldr     x1,     =logfile
+        mov     w2,     01000
+        mov     x8,     56
+        svc     0
+
+
 	mov	x27,	xzr
 	mov	x28,	xzr
 log_table:
