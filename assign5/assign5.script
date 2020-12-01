@@ -1,0 +1,737 @@
+Script started on 2020-12-01 15:17:10-07:00
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign5[rupertraphael.amodia@csa2 assign5]$ exitvim assign5.asmcat assign5.log[2P./assign5 5 5compile assign5[2P./assign5 5 5 occurrences.txt 
+9     0     9     6     9     
+7     0     6     1     4     
+9     7     6     0     0     
+0     9     5     8     6     
+1     0     4     5     4     
+
+Which word? 2
+How many documents do you want to retrieve? 5
+Document	Word	Occurences	Frequency
+    1	           2	         6	    0.333
+    4	           2	         4	    0.286
+    0	           2	         9	    0.273
+    2	           2	         6	    0.273
+    3	           2	         5	    0.179
+Do you want to search again? Enter 1 to do so.  1
+
+Which word? 3
+How many documents do you want to retrieve? 2
+Document	Word	Occurences	Frequency
+    4	           3	         5	    0.357
+    3	           3	         8	    0.286
+Do you want to search again? Enter 1 to do so.  0
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign5[rupertraphael.amodia@csa2 assign5]$ gdb s[Kassign5[K[K[K[K[K[K[K--args assign5 20 20
+GNU gdb (GDB) Fedora 8.1.1-4.fc28
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "aarch64-redhat-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from assign5...done.
+(gdb) b 169
+Breakpoint 1 at 0x400940: file assign5.s, line 169.
+(gdb) x/400d $x29-1596
+No registers.
+(gdb) x/400d $x29-1596[C[C[C[C[C[1@\[1P[1P[C[C[C[C[C[C[C[C[C[C[C[K[K[K[K[1P[1P[1@2[1@5[C[C[C[C[C[C[C96
+No registers.
+(gdb) l
+1	// --------------------------------------------------------
+2	// Author: 	Rupert Raphael Amodia
+3	// Date:	November 18, 2020
+4	// Description:	Simple emulation of search engine
+5	// --------------------------------------------------------
+6	
+7		.text
+8		theD: 		.string "%d"
+9		theS:		.string "%s\n"
+10		cell:		.string "%-6d"
+(gdb) l 169
+164	
+165		add	x0,	x29,	table_s				// first arg is table's base address	
+166		mov	x1,	x19					// second arg is number of rows
+167		mov	x2,	x20					// third arg is number of cols
+168		mov	w3,	w23					// fourth arg is file descriptor
+169		bl	initialize
+170	
+171	
+172		add	x0,	x29,	table_s				// first arg is table's base address	
+173		mov	x1,	x19					// second arg is number of rows
+(gdb) n
+The program is not being run.
+(gdb) r
+Starting program: /home/ugc/rupertraphael.amodia/cpsc-355/assign5/assign5 20 20
+warning: the debug information found in "/usr/lib/debug//usr/lib64/ld-2.27.so.debug" does not match "/lib/ld-linux-aarch64.so.1" (CRC mismatch).
+
+Missing separate debuginfos, use: dnf debuginfo-install glibc-2.27-38.fc28.aarch64
+warning: the debug information found in "/usr/lib/debug//lib64/libc-2.27.so.debug" does not match "/lib64/libc.so.6" (CRC mismatch).
+
+warning: the debug information found in "/usr/lib/debug//usr/lib64/libc-2.27.so.debug" does not match "/lib64/libc.so.6" (CRC mismatch).
+
+
+Breakpoint 1, store_args () at assign5.s:169
+169		bl	initialize
+(gdb) rnl 169[Kx/25d $x29-96
+0xffffffffef30:	0	2130432	0	2130432
+0xffffffffef40:	0	-2147483646	2097152	0
+0xffffffffef50:	-4240	65535	-1084814320	65535
+0xffffffffef60:	0	870057202	2142333440	588898017
+0xffffffffef70:	-4208	65535	4196620	0
+0xffffffffef80:	20	0	20	0
+0xffffffffef90:	-4176
+(gdb) x/25d $x29-96[C[C[C[C[C[Cr[Knl 169[Kx/25d $x29-96[C[C[C[C[C[C[C[C400d $x29-1596
+0xffffffffe954:	0	4194368	0	9
+0xffffffffe964:	0	0	0	0
+0xffffffffe974:	0	0	0	0
+0xffffffffe984:	0	0	0	0
+0xffffffffe994:	0	0	0	1
+0xffffffffe9a4:	0	0	0	-1083281408
+0xffffffffe9b4:	65535	-1083177192	65535	-1083178696
+0xffffffffe9c4:	65535	-1083198848	65535	1
+0xffffffffe9d4:	65535	-1083187200	65535	-1083183104
+0xffffffffe9e4:	65535	-1083183104	65535	0
+0xffffffffe9f4:	0	0	0	0
+0xffffffffea04:	0	0	0	0
+0xffffffffea14:	0	-3816	65535	0
+0xffffffffea24:	0	0	0	1
+0xffffffffea34:	0	0	0	0
+0xffffffffea44:	0	0	0	0
+0xffffffffea54:	0	0	0	0
+0xffffffffea64:	0	0	0	0
+0xffffffffea74:	0	0	0	0
+0xffffffffea84:	0	0	0	0
+0xffffffffea94:	0	0	0	0
+0xffffffffeaa4:	0	0	0	0
+0xffffffffeab4:	0	0	0	-5312
+0xffffffffeac4:	65535	-1083293652	65535	0
+0xffffffffead4:	0	-1083187200	65535	-1083371408
+0xffffffffeae4:	65535	-1083187200	65535	1
+0xffffffffeaf4:	0	-1083191296	65535	-3240
+0xffffffffeb04:	65535	0	0	-5312
+0xffffffffeb14:	65535	-1083293400	65535	-1083185344
+---Type <return> to continue, or q <return> to quit---q
+Quit
+(gdb) n
+172		add	x0,	x29,	table_s				// first arg is table's base address	
+(gdb) l
+167		mov	x2,	x20					// third arg is number of cols
+168		mov	w3,	w23					// fourth arg is file descriptor
+169		bl	initialize
+170	
+171	
+172		add	x0,	x29,	table_s				// first arg is table's base address	
+173		mov	x1,	x19					// second arg is number of rows
+174		mov	x2,	x20					// third arg is number of cols
+175		bl	display
+176	
+(gdb) lnx/400d $x29-1596
+0xffffffffe954:	1	4	8	1
+0xffffffffe964:	3	4	8	0
+0xffffffffe974:	3	2	4	7
+0xffffffffe984:	5	3	9	0
+0xffffffffe994:	6	3	8	8
+0xffffffffe9a4:	4	3	8	3
+0xffffffffe9b4:	3	2	1	4
+0xffffffffe9c4:	8	6	3	9
+0xffffffffe9d4:	8	1	1	1
+0xffffffffe9e4:	1	6	4	3
+0xffffffffe9f4:	5	9	6	3
+0xffffffffea04:	6	5	2	6
+0xffffffffea14:	7	5	0	1
+0xffffffffea24:	7	4	0	9
+0xffffffffea34:	3	3	9	7
+0xffffffffea44:	5	2	6	7
+0xffffffffea54:	0	5	5	6
+0xffffffffea64:	9	2	7	9
+0xffffffffea74:	3	1	1	8
+0xffffffffea84:	6	5	3	4
+0xffffffffea94:	7	6	1	8
+0xffffffffeaa4:	8	5	8	4
+0xffffffffeab4:	7	7	0	8
+0xffffffffeac4:	0	9	0	4
+0xffffffffead4:	4	2	9	7
+0xffffffffeae4:	9	4	8	4
+0xffffffffeaf4:	3	6	3	1
+0xffffffffeb04:	7	7	3	7
+0xffffffffeb14:	6	4	0	4
+---Type <return> to continue, or q <return> to quit---q
+Quit
+(gdb) b call_toprel
+Breakpoint 2 at 0x400990: file assign5.s, line 202.
+(gdb) c
+Continuing.
+4     3     2     3     9     2     0     5     6     6     0     4     6     3     8     5     7     6     8     7     
+0     9     5     8     6     7     1     3     1     2     7     7     7     9     0     8     3     2     4     0     
+8     6     6     6     9     4     1     7     1     2     6     3     1     1     1     8     0     2     3     3     
+7     1     1     6     2     3     5     6     6     1     6     6     7     2     3     8     7     6     5     0     
+8     3     5     2     7     6     2     7     1     5     1     0     6     4     6     9     7     3     7     5     
+4     3     2     3     5     7     2     4     3     9     6     4     5     3     6     2     2     8     1     3     
+5     4     5     2     8     3     3     6     7     0     3     3     5     5     7     2     2     1     9     8     
+0     7     2     5     1     0     9     3     8     1     6     3     5     3     7     4     6     2     2     3     
+4     5     9     9     3     6     2     7     9     1     5     1     8     9     9     9     9     8     4     9     
+9     2     5     7     5     4     3     2     7     5     5     1     2     6     3     7     2     5     7     3     
+8     4     5     6     4     4     8     5     4     2     5     4     7     2     3     2     6     6     4     5     
+3     2     7     7     8     0     5     3     7     2     6     5     6     3     3     2     7     3     8     2     
+8     5     8     5     7     3     7     5     9     4     1     2     6     0     9     4     2     6     9     9     
+8     6     6     7     1     9     1     9     3     9     3     1     6     3     8     3     6     5     1     7     
+9     2     9     7     4     0     4     6     7     3     7     7     1     3     6     3     4     8     4     9     
+7     9     2     4     4     0     9     0     8     0     7     7     4     8     5     8     8     1     6     7     
+4     3     5     6     8     1     1     3     9     7     2     9     6     5     5     0     7     6     2     5     
+7     9     3     3     9     0     4     7     1     0     5     7     6     2     5     6     3     6     9     5     
+3     4     6     1     1     1     1     8     9     3     6     8     4     1     2     3     3     8     3     4     
+8     8     3     6     0     9     3     5     7     4     2     3     0     8     4     3     1     8     4     1     
+
+Which word? 2
+How many documents do you want to retrieve? 20
+
+Breakpoint 2, call_toprel () at assign5.s:202
+202		add	x0,	x29,	table_s				// first arg is table's base address
+(gdb) x/[K[Ks
+203		mov	x1,	x19					// second arg is number of rows
+(gdb) s
+204		mov	x2,	x20					// third arg is number of cols
+(gdb) s
+205		mov	x3,	x28
+(gdb) s
+206		mov	x4,	x25
+(gdb) s
+207		add	x5,	x29,	x21			// fifth arg is indices array base address
+(gdb) s
+208		bl	topRelevantDocs
+(gdb) b sorting_outer_loop
+Breakpoint 3 at 0x400ce8: file assign5.s, line 637.
+(gdb) c
+Continuing.
+
+Breakpoint 3, sorting_outer_loop () at assign5.s:637
+637		mov	x21,	xzr
+(gdb) x/20d $x23-76
+0xffffffffe904:	19	18	17	16
+0xffffffffe914:	15	14	13	12
+0xffffffffe924:	11	10	9	8
+0xffffffffe934:	7	6	5	4
+0xffffffffe944:	3	2	1	0
+(gdb) n
+639		mov	x27,		xzr
+(gdb) n
+sorting_inner_loop () at assign5.s:641
+641		b	sorting_inner_test
+(gdb) n
+sorting_inner_test () at assign5.s:715
+715		sub	x11,	x19,	1	// initialize numrows - 1
+(gdb) n
+716		cmp	x27,		x11			// if row < numrows - 1
+(gdb) n
+717		b.lt	sorting_inner_body			// arrange next items	
+(gdb) b display_topdocs
+Breakpoint 4 at 0x400da8: file assign5.s, line 731.
+(gdb) c
+Continuing.
+
+Breakpoint 3, sorting_outer_loop () at assign5.s:637
+637		mov	x21,	xzr
+(gdb) cb display_topdocs[C[C[C[C[C[Cn[Kx/20d $x23-76[C[C[C[C[C[Cc[Kx/20d $x23-76
+0xffffffffe904:	3	19	18	17
+0xffffffffe914:	16	15	14	13
+0xffffffffe924:	12	11	10	9
+0xffffffffe934:	8	7	6	5
+0xffffffffe944:	4	0	2	1
+(gdb) b 1[K217
+Breakpoint 5 at 0x4009c8: file assign5.s, line 217.
+(gdb) c
+Continuing.
+
+Breakpoint 3, sorting_outer_loop () at assign5.s:637
+637		mov	x21,	xzr
+(gdb) d 3
+(gdb) c
+Continuing.
+Document	Word	Occurences	Frequency
+
+Breakpoint 4, display_topdocs () at assign5.s:731
+731		sub	x27,	xzr,	x27		// make row negative so that offset is negative
+(gdb) c
+Continuing.
+   14	           2	         9	    0.087
+
+Breakpoint 4, display_topdocs () at assign5.s:731
+731		sub	x27,	xzr,	x27		// make row negative so that offset is negative
+(gdb) d 4
+(gdb) c
+Continuing.
+   11	           2	         7	    0.079
+    2	           2	         6	    0.077
+   18	           2	         6	    0.076
+   12	           2	         8	    0.073
+    8	           2	         9	    0.071
+   13	           2	         6	    0.059
+    6	           2	         5	    0.057
+    1	           2	         5	    0.056
+    9	           2	         5	    0.056
+    4	           2	         5	    0.053
+   10	           2	         5	    0.053
+   16	           2	         5	    0.053
+   19	           2	         3	    0.034
+   17	           2	         3	    0.031
+    7	           2	         2	    0.026
+    5	           2	         2	    0.024
+    0	           2	         2	    0.021
+   15	           2	         2	    0.019
+    3	           2	         1	    0.011
+
+Breakpoint 5, call_toprel () at assign5.s:217
+217		bl	logToFile
+(gdb) p/d [K[K[K[Kl
+212		mov	x2,	x20					// third arg is number of cols
+213		mov	x3,	x25
+214		mov	x4,	x28
+215		add	x5,	x29,	x21			// fifth arg is indices array base address
+216		ldr	w6,	[x29, askagain_s]	
+217		bl	logToFile
+218	
+219		// Ask if user wants to search again
+220		ldr	x0,	=askagain
+221		bl	printf
+(gdb) p/d $x[K[K[K $x0
+$1 = 281474976706448
+(gdb) p/d $x0[K1
+$2 = 20
+(gdb) p/d $x1[K2
+$3 = 20
+(gdb) p/d $x2[K3
+$4 = 20
+(gdb) p/d $x3[K4
+$5 = 2
+(gdb) p/d $x4[K5
+$6 = 281474976704848
+(gdb) p/d $x5[K[K[K[K[K[K[Kx/400d x[K$x0-1596
+0xffffffffe954:	1	4	8	1
+0xffffffffe964:	3	4	8	0
+0xffffffffe974:	3	2	4	7
+0xffffffffe984:	5	3	9	0
+0xffffffffe994:	6	3	8	8
+0xffffffffe9a4:	4	3	8	3
+0xffffffffe9b4:	3	2	1	4
+0xffffffffe9c4:	8	6	3	9
+0xffffffffe9d4:	8	1	1	1
+0xffffffffe9e4:	1	6	4	3
+0xffffffffe9f4:	5	9	6	3
+0xffffffffea04:	6	5	2	6
+0xffffffffea14:	7	5	0	1
+0xffffffffea24:	7	4	0	9
+0xffffffffea34:	3	3	9	7
+0xffffffffea44:	5	2	6	7
+0xffffffffea54:	0	5	5	6
+0xffffffffea64:	9	2	7	9
+0xffffffffea74:	3	1	1	8
+0xffffffffea84:	6	5	3	4
+0xffffffffea94:	7	6	1	8
+0xffffffffeaa4:	8	5	8	4
+0xffffffffeab4:	7	7	0	8
+0xffffffffeac4:	0	9	0	4
+0xffffffffead4:	4	2	9	7
+0xffffffffeae4:	9	4	8	4
+0xffffffffeaf4:	3	6	3	1
+0xffffffffeb04:	7	7	3	7
+0xffffffffeb14:	6	4	0	4
+---Type <return> to continue, or q <return> to quit---q
+Quit
+(gdb) x/400d $x0-1596[8Pp/d $x5x/400d $x0-1596[C[C[C[C[C[K[K[K[K[K[K[K[K[K[K[K[K[K[K[Kp/d $x5
+$7 = 281474976704848
+(gdb) p/d $x5[1P[1@x[C[1@2[1@0[C[C[C[C[C-76
+0xffffffffe904:	3	15	0	5
+0xffffffffe914:	7	17	19	16
+0xffffffffe924:	10	4	9	1
+0xffffffffe934:	6	13	8	12
+0xffffffffe944:	18	2	11	14
+(gdb) b log_store
+Breakpoint 6 at 0x40106c: file assign5.s, line 1104.
+(gdb) c
+Continuing.
+
+Breakpoint 6, log_store () at assign5.s:1104
+1104		str	w25,	[x29, ndocs_s] 	
+(gdb) p/d $w25
+$8 = 20
+(gdb) s[Ks
+1105		str	w28,			[x29, scol_s]	
+(gdb) x/d $w[Kx29[K[K[K[K[K[K[K[Ks
+1106		str	x23,		[x29, pointer_indices_s]
+(gdb) s
+1107		str	w6,			[x29, append_s]
+(gdb) s
+1111		ldr	w6,	[x29, append_s]
+(gdb) sp/d $w25[1P[1@x[C[C[1P $w25d $w25[C[C[C[C[C[K[K[Kx29+6[K96[C[1@2[1@0
+0xffffffffe8b0:	20	2	20	-5808
+0xffffffffe8c0:	65535	-1	400	0
+0xffffffffe8d0:	0	0	0	0
+0xffffffffe8e0:	20	0	-80	-1
+0xffffffffe8f0:	0	0	2	0
+(gdb) x/20d $x29+96+36
+0xffffffffe8d4:	0	0	0	20
+0xffffffffe8e4:	0	-80	-1	0
+0xffffffffe8f4:	0	2	0	-5312
+0xffffffffe904:	3	15	0	5
+0xffffffffe914:	7	17	19	16
+(gdb) x/20d $x29+96+36[K[K[K
+0xffffffffe8b0:	20	2	20	-5808
+0xffffffffe8c0:	65535	-1	400	0
+0xffffffffe8d0:	0	0	0	0
+0xffffffffe8e0:	20	0	-80	-1
+0xffffffffe8f0:	0	0	2	0
+(gdb) x/20d $x29+96[1P[1P
+0xffffffffe8b0:	20
+(gdb) x/d $x29+96+8
+0xffffffffe8b8:	20
+(gdb) x/d $x29+96+8[C[1@4[C[C[C[C[C[C[C[C[C[C[C[K36
+0xffffffffe8d4:	0	0	0	20
+(gdb) x/4d $x29+96+36[1P[1@8[1P[1@1[1@0
+0xffffffffe8d4:	0	0	0	20
+0xffffffffe8e4:	0	-80	-1	0
+0xffffffffe8f4:	0	2
+(gdb) x/10d $x29+96+36[1P[1@2
+0xffffffffe8d4:	0	0	0	20
+0xffffffffe8e4:	0	-80	-1	0
+0xffffffffe8f4:	0	2	0	-5312
+(gdb) b log_open
+Breakpoint 7 at 0x401088: file assign5.s, line 1117.
+(gdb) c
+Continuing.
+
+Breakpoint 7, log_open () at assign5.s:1117
+1117		mov     w0,     -100
+(gdb) s
+1118	        ldr     x1,     =logfile
+(gdb) s
+1119	        mov     w2,     0101
+(gdb) s
+1120		mov	w3,	0700
+(gdb) s
+1121	        mov     x8,     56
+(gdb) s
+1122	        svc     0
+(gdb) s
+1123		mov	w23,	w0		// remember file descriptor	
+(gdb) s
+1124		str	w23,	[x29, fd_s]
+(gdb) p/d $w23
+$9 = 3
+(gdb) p/d $w23[C[C[C[C[C[Cs[Kcb log_open[C[C[C[C[C[Cx/12d $x29+96+36
+0xffffffffe8d4:	0	0	0	20
+0xffffffffe8e4:	0	-80	-1	0
+0xffffffffe8f4:	0	2	0	-5312
+(gdb) x/12d $x29+96+36[1P[1P[C[C[C[C[C[C[C[C[C[C[C[C[K[K8
+0xffffffffe8b8:	20
+(gdb) x/d $x29+96+8[K12
+0xffffffffe8bc:	-5808
+(gdb) x/d $x29+96+12[K[K16
+0xffffffffe8c0:	65535
+(gdb) x/d $x29+96+16[K[K32
+0xffffffffe8d0:	0
+(gdb) x/d $x29+96+32[K[K20
+0xffffffffe8c4:	-1
+(gdb) x/d $x29+96+20[K4
+0xffffffffe8c8:	400
+(gdb) s
+1125		b	log_truncate
+(gdb) sx/d $x29+96+24[K[K8
+0xffffffffe8b8:	20
+(gdb) x/d $x29+96+8[K12
+0xffffffffe8bc:	-5808
+(gdb) x/d $x29+96+12[K6
+0xffffffffe8c0:	65535
+(gdb) x/d $x29+96+16[K[K20
+0xffffffffe8c4:	3
+(gdb) x/d $x29+96+20162[1P8[C[C[C[C[C[Cs[Kx/d $x29+96+24032162[1P8[C[C[C[C[C[C[C[C12d $x29+96+36
+0xffffffffe8d4:	0	0	0	20
+0xffffffffe8e4:	0	-80	-1	0
+0xffffffffe8f4:	0	2	0	-5312
+(gdb) x/12d $x29+96+36[K[K20
+0xffffffffe8c4:	3	400	0	0
+0xffffffffe8d4:	0	0	0	20
+0xffffffffe8e4:	0	-80	-1	0
+(gdb) x/12d $x29+96+20[K[K[K
+0xffffffffe8b0:	20	2	20	-5808
+0xffffffffe8c0:	65535	3	400	0
+0xffffffffe8d0:	0	0	0	0
+(gdb) x/12d $x29+96[1P[1P[1@8
+0xffffffffe8b0:	20	2	20	-5808
+0xffffffffe8c0:	65535	3	400	0
+(gdb) n
+log_truncate () at assign5.s:1140
+1140		mov     w0,     -100
+(gdb) n
+1141	        ldr     x1,     =logfile
+(gdb) n
+1142	        mov     w2,     01000
+(gdb) x[Kx/s $x1
+0x400852 <logfile>:	"assign5.log"
+(gdb) n
+1143	        mov     x8,     56
+(gdb) n
+1144	        svc     0
+(gdb) n
+1147		mov	x27,	xzr
+(gdb) n
+1148		mov	x28,	xzr
+(gdb) n
+log_table () at assign5.s:1153
+1153		sub	x27,	xzr,	x27	// negate row
+(gdb) n
+1154		mul	x27,	x27,	x20	// row = row * numcols
+(gdb) n
+1155		sub	x27,	x27,	x28	// row -= col
+(gdb) n
+1156		ldr	w25,	[x26, x27, LSL 2] // load value from array
+(gdb) clear
+No breakpoint at this line.
+(gdb) d
+Delete all breakpoints? (y or n) y
+(gdb) b ask
+Breakpoint 8 at 0x400958: file assign5.s, line 179.
+(gdb) r[Kc
+Continuing.
+Do you want to search again? Enter 1 to do so.  1
+
+Breakpoint 8, ask () at assign5.s:179
+179		ldr	x0,	=linebreak
+(gdb) s
+180		bl	printf
+(gdb) p/d [K[Ks $x0
+$10 = 4196428
+(gdb) p/s $x0[C[1P[1@x
+0x40084c <linebreak>:	"\n"
+(gdb) s
+
+183		ldr	x0,	=askcolumn
+(gdb) s
+184		bl	printf
+(gdb) sx/s $x0
+0x4007b8 <askcolumn>:	"Which word? "
+(gdb) s
+Which word? 11
+How many documents do you want to retrieve? 20
+Document	Word	Occurences	Frequency
+   18	          11	         8	    0.101
+   16	          11	         9	    0.096
+    1	          11	         7	    0.079
+   17	          11	         7	    0.072
+    3	          11	         6	    0.068
+   14	          11	         7	    0.068
+   15	          11	         7	    0.067
+   11	          11	         5	    0.056
+    5	          11	         4	    0.049
+    0	          11	         4	    0.043
+   10	          11	         4	    0.043
+    7	          11	         3	    0.039
+    2	          11	         3	    0.038
+   19	          11	         3	    0.034
+    6	          11	         3	    0.034
+   12	          11	         2	    0.018
+    9	          11	         1	    0.011
+   13	          11	         1	    0.010
+    8	          11	         1	    0.008
+    4	          11	         0	    0.000
+Do you want to search again? Enter 1 to do so.  1
+
+Breakpoint 8, ask () at assign5.s:179
+179		ldr	x0,	=linebreak
+(gdb) s
+180		bl	printf
+(gdb) s
+
+183		ldr	x0,	=askcolumn
+(gdb) s
+184		bl	printf
+(gdb) s
+Which word? 19
+How many documents do you want to retrieve? 5
+Document	Word	Occurences	Frequency
+    6	          19	         8	    0.091
+   14	          19	         9	    0.087
+   12	          19	         9	    0.083
+    0	          19	         7	    0.074
+    8	          19	         9	    0.071
+Do you want to search again? Enter 1 to do so.  1
+
+Breakpoint 8, ask () at assign5.s:179
+179		ldr	x0,	=linebreak
+(gdb) b 190
+Breakpoint 9 at 0x400974: file assign5.s, line 190.
+(gdb) c
+Continuing.
+
+Which word? 6
+
+Breakpoint 9, ask_col () at assign5.s:190
+190		ldr	x28,	[x29, input_s]
+(gdb) b 188
+Breakpoint 10 at 0x40096c: file assign5.s, line 188.
+(gdb) c
+Continuing.
+How many documents do you want to retrieve? 4
+Document	Word	Occurences	Frequency
+    7	           6	         9	    0.117
+   15	           6	         9	    0.087
+   10	           6	         8	    0.085
+   12	           6	         7	    0.064
+Do you want to search again? Enter 1 to do so.  1
+
+Breakpoint 8, ask () at assign5.s:179
+179		ldr	x0,	=linebreak
+(gdb) c
+Continuing.
+
+
+Breakpoint 10, ask_col () at assign5.s:188
+188		add	x1,	x29,	input_s
+(gdb) s
+189		bl	scanf
+(gdb) p/d $x1
+$11 = 281474976706472
+(gdb) x[Kp/x $x1
+$12 = 0xffffffffefa8
+(gdb) c
+Continuing.
+Which word? 10
+
+Breakpoint 9, ask_col () at assign5.s:190
+190		ldr	x28,	[x29, input_s]
+(gdb) x/d 0xffffffffefa8
+0xffffffffefa8:	10
+(gdb) s
+193		ldr	x0,	=askretrieve
+(gdb) x/d $x28
+0xa:	Cannot access memory at address 0xa
+(gdb) x/d $x28[1P[1@p
+$13 = 10
+(gdb) s
+194		bl	printf
+(gdb) s
+196		ldr		x0,			=theD
+(gdb) s
+197		add		x1,			x29, 	input_s
+(gdb) s
+198		bl		scanf
+(gdb) x/d $x1[K[K[K[K[K[K[Kp/d [K[Kx $x1
+$14 = 0xffffffffefa8
+(gdb) s
+How many documents do you want to retrieve? 2
+199		ldr		x25,	[x29, input_s]
+(gdb) s
+call_toprel () at assign5.s:202
+202		add	x0,	x29,	table_s				// first arg is table's base address
+(gdb) p/d $x25
+$15 = 2
+(gdb) x/d 0xffffffffefa8
+0xffffffffefa8:	2
+(gdb) d
+Delete all breakpoints? (y or n) y
+(gdb) c
+Continuing.
+Document	Word	Occurences	Frequency
+    1	          10	         7	    0.079
+    7	          10	         6	    0.078
+Do you want to search again? Enter 1 to do so.  0
+[Inferior 1 (process 21316) exited with code 01]
+(gdb) cat .assign[K[K[K[K[K[K[K[K[K[K[Kq
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign5[rupertraphael.amodia@csa2 assign5]$ cat assign5.log
+4 3 2 3 9 2 0 5 6 6 0 4 6 3 8 5 7 6 8 7 
+0 9 5 8 6 7 1 3 1 2 7 7 7 9 0 8 3 2 4 0 
+8 6 6 6 9 4 1 7 1 2 6 3 1 1 1 8 0 2 3 3 
+7 1 1 6 2 3 5 6 6 1 6 6 7 2 3 8 7 6 5 0 
+8 3 5 2 7 6 2 7 1 5 1 0 6 4 6 9 7 3 7 5 
+4 3 2 3 5 7 2 4 3 9 6 4 5 3 6 2 2 8 1 3 
+5 4 5 2 8 3 3 6 7 0 3 3 5 5 7 2 2 1 9 8 
+0 7 2 5 1 0 9 3 8 1 6 3 5 3 7 4 6 2 2 3 
+4 5 9 9 3 6 2 7 9 1 5 1 8 9 9 9 9 8 4 9 
+9 2 5 7 5 4 3 2 7 5 5 1 2 6 3 7 2 5 7 3 
+8 4 5 6 4 4 8 5 4 2 5 4 7 2 3 2 6 6 4 5 
+3 2 7 7 8 0 5 3 7 2 6 5 6 3 3 2 7 3 8 2 
+8 5 8 5 7 3 7 5 9 4 1 2 6 0 9 4 2 6 9 9 
+8 6 6 7 1 9 1 9 3 9 3 1 6 3 8 3 6 5 1 7 
+9 2 9 7 4 0 4 6 7 3 7 7 1 3 6 3 4 8 4 9 
+7 9 2 4 4 0 9 0 8 0 7 7 4 8 5 8 8 1 6 7 
+4 3 5 6 8 1 1 3 9 7 2 9 6 5 5 0 7 6 2 5 
+7 9 3 3 9 0 4 7 1 0 5 7 6 2 5 6 3 6 9 5 
+3 4 6 1 1 1 1 8 9 3 6 8 4 1 2 3 3 8 3 4 
+8 8 3 6 0 9 3 5 7 4 2 3 0 8 4 3 1 8 4 1 
+Which word?2 
+How many documents do you want to retrieve? 20   
+Document	Word	Occurences	Frequency
+    14	           2	         9	    0.087
+   11	           2	         7	    0.079
+    2	           2	         6	    0.077
+   18	           2	         6	    0.076
+   12	           2	         8	    0.073
+    8	           2	         9	    0.071
+   13	           2	         6	    0.059
+    6	           2	         5	    0.057
+    1	           2	         5	    0.056
+    9	           2	         5	    0.056
+    4	           2	         5	    0.053
+   10	           2	         5	    0.053
+   16	           2	         5	    0.053
+   19	           2	         3	    0.034
+   17	           2	         3	    0.031
+    7	           2	         2	    0.026
+    5	           2	         2	    0.024
+    0	           2	         2	    0.021
+   15	           2	         2	    0.019
+    3	           2	         1	    0.011
+Which word?1 
+How many documents do you want to retrieve? 20   
+Document	Word	Occurences	Frequency
+    18	          11	         8	    0.101
+   16	          11	         9	    0.096
+    1	          11	         7	    0.079
+   17	          11	         7	    0.072
+    3	          11	         6	    0.068
+   14	          11	         7	    0.068
+   15	          11	         7	    0.067
+   11	          11	         5	    0.056
+    5	          11	         4	    0.049
+    0	          11	         4	    0.043
+   10	          11	         4	    0.043
+    7	          11	         3	    0.039
+    2	          11	         3	    0.038
+   19	          11	         3	    0.034
+    6	          11	         3	    0.034
+   12	          11	         2	    0.018
+    9	          11	         1	    0.011
+   13	          11	         1	    0.010
+    8	          11	         1	    0.008
+    4	          11	         0	    0.000
+Which word?1 
+How many documents do you want to retrieve? 5    
+Document	Word	Occurences	Frequency
+     6	          19	         8	    0.091
+   14	          19	         9	    0.087
+   12	          19	         9	    0.083
+    0	          19	         7	    0.074
+    8	          19	         9	    0.071
+Which word?6 
+How many documents do you want to retrieve? 4    
+Document	Word	Occurences	Frequency
+     7	           6	         9	    0.117
+   15	           6	         9	    0.087
+   10	           6	         8	    0.085
+   12	           6	         7	    0.064
+Which word?1 
+How many documents do you want to retrieve? 2    
+Document	Word	Occurences	Frequency
+     1	          10	         7	    0.079
+    7	          10	         6	    0.078
+]0;rupertraphael.amodia@csa2:~/cpsc-355/assign5[rupertraphael.amodia@csa2 assign5]$ exit
+exit
+
+Script done on 2020-12-01 15:42:52-07:00
