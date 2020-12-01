@@ -8,11 +8,10 @@
 	theD: 		.string "%d"
 	theS:		.string "%s\n"
 	cell:		.string "%-6d"
-	testint:	.string "%d\n"
-	testfloat:	.string "%f\n"
 	header: 	.string	"Document\tWord\tOccurences\tFrequency\n"
 	askcolumn:	.string	"Which word? "
 	askretrieve:	.string	"How many documents do you want to retrieve? "
+	askagain:	.string "Do you want to search again? Enter 1 to do so.  "
 	rowinfo:	.string "%5d\t%12d\t%10d\t%9.3f\n"
 	error:		.string "Invalid arguments.\n"
 	linebreak: 	.string "\n"	
@@ -30,6 +29,7 @@
 		// file descriptor
 		// offset to get a table cell's address
 	// number of top docs to retrieve
+	// number determining to search again
 	// number of bytes needed to allocate for the indices array
 		// current row
 		// current column
@@ -70,11 +70,13 @@
 
 TABLE_ELEMENT_SIZE = 4
 table_s = 0
-ALIGN = -16
-MAX_RAND = 16 - 1
 
 .balign 4
 .global main
+
+askagain_s = 16
+searchcol_s = 20
+input_s = 24
 
 main:	
 
@@ -172,6 +174,8 @@ main:
 	mov	x2,	x20					// third arg is number of cols
 	bl	display
 
+	str	wzr,	[x29, askagain_s]
+ask:
 	ldr	x0,	=linebreak
 	bl	printf
 
@@ -179,22 +183,22 @@ main:
 	ldr	x0,	=askcolumn
 	bl	printf
 
+ask_col:
 	ldr	x0,	=theD
-	ldr	x1,	=col_i
+	add	x1,	x29,	input_s
 	bl	scanf
-	ldr	x3,	=col_i
-	ldr	x28,	[x3]
+	ldr	x28,	[x29, input_s]
 
 	// Ask for number of docs to retrieve
 	ldr	x0,	=askretrieve
 	bl	printf
 
-	ldr	x0,	=theD
-	ldr	x1,	=num_docs
-	bl	scanf
-	ldr	x4,	=num_docs
-	ldr	x25,	[x4]
-	
+	ldr		x0,			=theD
+	add		x1,			x29, 	input_s
+	bl		scanf
+	ldr		x25,	[x29, input_s]
+
+call_toprel:
 	add	x0,	x29,	table_s				// first arg is table's base address
 	mov	x1,	x19					// second arg is number of rows
 	mov	x2,	x20					// third arg is number of cols
@@ -209,7 +213,20 @@ main:
 	mov	x3,	x25
 	mov	x4,	x28
 	add	x5,	x29,	x21			// fifth arg is indices array base address
+	ldr	w6,	[x29, askagain_s]	
 	bl	logToFile
+
+	// Ask if user wants to search again
+	ldr	x0,	=askagain
+	bl	printf
+
+	ldr	x0,	=theD
+	add	x1,	x29,	askagain_s
+	bl	scanf
+	ldr	w25,	[x29, askagain_s]
+
+	cmp	w25,	1
+	b.eq	ask
 
 	// Calculate required space for table
 	// number of bytes allocated for table = 4 * m * n
@@ -1041,19 +1058,21 @@ ndocs_size = 4
 pointer_indices_size = 8
 stringbuf_size = 50
 fd_size = 4
-buf_s = dealloc + 8
+append_size = 4
+buf_s = dealloc
 scol_s = buf_s + 4
 ndocs_s = scol_s + 4 
 pointer_indices_s = ndocs_s + ndocs_size
 fd_s = pointer_indices_s + pointer_indices_size
 stringbuf_s = fd_s + fd_size
-alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size - fd_size - stringbuf_size) & -16 
+append_s = stringbuf_s + stringbuf_size 
+alloc = (alloc - buf_size - scol_size - ndocs_size - pointer_indices_size - fd_size - stringbuf_size- append_size) & -16 
 dealloc = -alloc
 
 
 
 
-// logToFile(*table, numrows, numcols, num_docs, col_i)
+// logToFile(*table, numrows, numcols, num_docs, col_i, append_or_not)
 logToFile: 
 
 	
@@ -1080,11 +1099,20 @@ logToFile:
 	mov	w28,			w4
 	mov	x23,		x5
 
+log_store:
 	// store variables
 	str	w25,	[x29, ndocs_s] 	
 	str	w28,			[x29, scol_s]	
 	str	x23,		[x29, pointer_indices_s]
+	str	w6,			[x29, append_s]
 
+	// if append,
+	// append, skip to part after logging table 
+	ldr	w6,	[x29, append_s]
+	cmp	w6,	1
+	b.eq	log_append
+
+log_open:
 	// open log file
 	mov     w0,     -100
         ldr     x1,     =logfile
@@ -1094,7 +1122,20 @@ logToFile:
         svc     0
 	mov	w23,	w0		// remember file descriptor	
 	str	w23,	[x29, fd_s]
+	b	log_truncate
 
+log_append:
+	mov     w0,     -100
+        ldr     x1,     =logfile
+        mov     w2,     02001
+        mov     x8,     56
+        svc     0
+	mov	w23,	w0		// remember file descriptor	
+	str	w23,	[x29, fd_s]
+	b	log_search_col
+
+
+log_truncate:
 	// truncate log file
 	mov     w0,     -100
         ldr     x1,     =logfile
@@ -1169,6 +1210,7 @@ log_inc_col:
 	cmp	x27,		x19					// if row < number of rows:
 	b.lt	log_table						// loop
 
+	ldr	w23,	[x29, fd_s]
 log_search_col:
 	// write question
 	
@@ -1180,11 +1222,11 @@ log_search_col:
 	
 	
 
-	ldr	x28,		[x29, scol_s]
+	ldr	w28,		[x29, scol_s]
 	// convert to string
 	
 	scvtf	d0,	w28
-	mov	x0,	1
+	mov	x0,	2
 	add	x1,	x29,	buf_s
 	bl	gcvt
 	
@@ -1372,7 +1414,3 @@ log_close_file:
 	ret
 	
 
-
-	.data
-	col_i:		.int	0
-	num_docs:	.int	0
