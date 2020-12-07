@@ -72,7 +72,7 @@ define(
 
 
 	.balign	4
-	.global	randNum
+	.global	randomNum
 
 init_subr_x()
 min_size = 4
