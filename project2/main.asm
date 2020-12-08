@@ -18,6 +18,12 @@ define(
 	txt_invalidargs:		.string "Invalid arguments."
 	f_9d:				.string	"%9d"
 	f_f2:				.string "%.2f"
+	cell_value:			.string "%8.2f"
+	br:				.string	"\n"
+	exit_info:			.string "Exit Position: %d\n"
+	numpos_info:			.string "Positives: %d / %d - %.2f\n"
+	numnegs_info:			.string "Negatives: %d / %d - %.2f\n"
+	numups_info:			.string "Powerups: %d / %d - %.2f\n"
 	tst_args:			.string "name: %s \trows: %d\tcols: %d"
 
 	.balign	4
@@ -95,15 +101,6 @@ main:
 	mov	x2,	x19		// pass rows
 	mov	x3,	x20		// pass cols
 	bl	initializeGame	
-
-test_randNum:
-	mov	x0,	0
-	mov	x1,	15
-	mov	x2,	1
-	bl	randomNum
-	fcvt	d0,	s0
-	ldr	x0, 	=f_f2
-	bl	printf
 
 	// Deallocate space for two boards:
 	ldr	w19,	[x29, numRows_s]
@@ -194,6 +191,24 @@ define(
 	mul	$2,	$2,	$4	// row = row * numcols
 	sub	$2,	$2,	$3	// row -= col
 	str	$5,	[$1, $2, LSL 2] // store value into array
+	add 	$2,	$2,	$3	// row += col
+	sdiv	$2,	$2,	$4	// row /= numcols
+	sub	$2,	xzr,	$2	// make row positive again
+	// row is now positive and restored
+	'
+)
+
+// macro for loading a float value into a 2D array
+// load_float_from_array2d(&array_r, row_r, col_r, numcols_r, value_sr) 
+define(
+	load_float_from_array2d,
+	`
+	// row_r is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	$2,	xzr,	$2	// negate row
+	mul	$2,	$2,	$4	// row = row * numcols
+	sub	$2,	$2,	$3	// row -= col
+	ldr	$5,	[$1, $2, LSL 2] // load value from array
 	add 	$2,	$2,	$3	// row += col
 	sdiv	$2,	$2,	$4	// row /= numcols
 	sub	$2,	xzr,	$2	// make row positive again
@@ -444,10 +459,98 @@ init_game_dec_ups:
 init_game_exit_store_zero:
 	scvtf	s20,	wzr
 	str	s20,	[x20, x19, LSL 2]	
+	sub	x19,	xzr, 	x19
+
+	ldr	x0,	=exit_info
+	mov	x1,	x19
+	bl	printf
+
+	str	wzr,	[x29, row_s]
+init_game_display_row:
+	b	init_game_display_row_test
+
+init_game_display_row_body:
+	str	wzr,	[x29, col_s]
+
+init_game_display_col:
+	b	init_game_display_col_test
+init_game_display_col_body:
+	
+	ldr	x19,	[x29, fboardp_s]
+	ldr	w20,	[x29, row_s]
+	ldr	w21,	[x29, col_s]
+	ldr	w22,	[x29, numCols_s]
+	load_float_from_array2d(x19, x20, x21, x22, s0)
+	fcvt	d0,	s0
+	ldr	x0,	=cell_value
+	bl	printf
+		
+	//increment column
+	ldr	w19,	[x29, col_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, col_s]
+
+init_game_display_col_test:
+	ldr	w19,	[x29, col_s]
+	ldr	w20,	[x29, numCols_s]
+	cmp	w19,	w20
+	b.lt	init_game_display_col_body
+
+	//increment row
+	ldr	w19,	[x29, row_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, row_s]
+
+	str	wzr,	[x29, col_s]
+
+	ldr	x0,	=br
+	bl	printf
+init_game_display_row_test:
+	ldr	w19,	[x29, row_s]
+	ldr	w20,	[x29, numRows_s]
+	cmp	w19,	w20
+	b.lt	init_game_display_row_body
+
+init_game_display_info:
+	// Calculate total number of cells
+	ldr	w27,	[x29, numRows_s]	
+	ldr	w28,	[x29, numCols_s]
+	mul	w28,	w27, 	w28
+
+	// Positives info
+	mov	w2,	w28
+	ldr	w19,	[x29, numnegs_s]
+	ldr	w20,	[x29, numups_s]
+	sub	w1,	w2,	w19
+	sub	w1,	w1,	w20
+	scvtf	d19,	x1
+	scvtf	d20,	x2
+	fdiv	d0,	d19,	d20
+	ldr	x0,	=numpos_info
+	bl	printf
+
+	// Negatives info
+	mov	w2,	w28
+	ldr	w1,	[x29, numnegs_s]
+	scvtf	d19,	x1
+	scvtf	d20,	x2
+	fdiv	d0,	d19,	d20
+	ldr	x0,	=numnegs_info
+	bl	printf
+
+	// Powerups info
+	mov	w2,	w28
+	ldr	w1,	[x29, numups_s]
+	scvtf	d19,	x1
+	scvtf	d20,	x2
+	fdiv	d0,	d19,	d20
+	ldr	x0,	=numups_info
+	bl	printf
 
 	ldr_x()
 	mov	x1, 	dealloc
 	endfunction(dealloc)
+	
 
 
 
