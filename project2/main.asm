@@ -388,6 +388,63 @@ init_game_loop_row_test:
 	cmp	w19,	w20
 	b.lt	init_game_loop_row_body
 
+	// Determine max position for exit tile
+	// Since randomNum only works with a max of
+	// 2^n - 1, here we select a max that is a power
+	// of 2 that is within the bounds of the board
+	mov	w19,	1			// w19 is max exit position
+init_game_det_exit:
+	ldr	w20,	[x29, numRows_s]
+	ldr	w21,	[x29, numCols_s]
+	mul	w20,	w20, 	w21
+	cmp	w19,	w20
+	b.lt	init_game_exit_pow
+	b.gt	init_game_exit_limit
+	b 	init_game_exit_store
+
+init_game_exit_pow:
+	lsl	w19,	w19,	1	
+	b	init_game_det_exit
+	
+init_game_exit_limit:	
+	lsr	w19,	w19,	1	
+	
+init_game_exit_store:
+	mov	w0,	1		// set min as 1
+	sub	w1,	w19,	1	// set max as powof2 - 1
+	mov	w2,	wzr		// get positive numbers
+	bl	randomNum
+	fcvtns	w19,	s0		// convert single to int
+
+	sub	x19,	xzr,	x19	// negate to use as offset
+	ldr	x20,	[x29, fboardp_s]// load address of float board
+	
+	scvtf	s20,	wzr			// convert zero to float
+	ldr	s19,	[x20, x19, LSL 2]	// load float value in board at chosen offset
+	fcmp	s19,	s20			// check float value to be replaced: if its < 0
+	b.lt	init_game_dec_neg		// decrement number of negatives if so
+	mov	w21,	69			// 69 is the integer representing powerups
+	scvtf	s21,	w21			// convert 69 to float
+	fcmp	s19,	s21			// compare float value to replaced: if its = 69
+	b.eq	init_game_dec_ups		// decrement num of power-ups if so
+	
+	b	init_game_exit_store_zero	// else, just directly store exit tile in board
+
+init_game_dec_neg:
+	ldr	w22,	[x29, numnegs_s]
+	sub	w22,	w22,	1
+	str	w22,	[x29, numnegs_s]
+	b	init_game_exit_store_zero
+
+init_game_dec_ups:
+	ldr	w22,	[x29, numups_s]
+	sub	w22,	w22,	1
+	str	w22,	[x29, numups_s]
+
+init_game_exit_store_zero:
+	scvtf	s20,	wzr
+	str	s20,	[x20, x19, LSL 2]	
+
 	ldr_x()
 	mov	x1, 	dealloc
 	endfunction(dealloc)
