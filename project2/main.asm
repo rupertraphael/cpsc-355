@@ -39,8 +39,12 @@ define(
 	txt_stopprompt:			.string "If you want to stop playing input \"-1 -1\".\n"
 	txt_dropbombprompt:		.string "Drop the bomb at (x y): "
 	txt_playinvalidinput:		.string "\x1B[31mSorry, invalid input! Try again.\x1B[0m\n"
+	txt_bombradiusinfo:		.string "\x1B[33mBang to the power of %d! Your next bomb's radius is now %d \x1B[0m\n"
 	scanf_bombcoords:		.string "%d %d"
 	txt_bombposition:		.string "Bombing position: %d, %d...\n"
+	txt_roundscore:			.string "Round Score: %.2f\n"
+	txt_totalscore:			.string "Total Score: %.2f\n"
+	txt_lives:			.string "Lives Left: %d\n"
 	tst_args:			.string "name: %s \trows: %d\tcols: %d"
 
 	.balign	4
@@ -786,7 +790,8 @@ calculateScore:
 	str	x11,	[x29, exitfoundp_s]
 
 	// Initialize scores
-	ldr	wzr,	[x29, roundscore_s]
+	scvtf	s19,	wzr	
+	str	s19,	[x29, roundscore_s]
 
 	// Calculate start position (top left)
 	ldr	w19,	[x29, x_s]
@@ -877,6 +882,40 @@ calculateScore_loop_col_body:
 	// calculate round score
 	ldr	x19,	[x29, fboardp_s]
 	load_float_from_array2d(x19, x20, x21, x22, s19)
+	str	s19,	[x29, score_s]
+
+	mov	w19,	69	
+	scvtf	s20,	w19
+	fcmp	s19,	s20
+	b.eq	calculateScore_increment_bombpowerups
+	mov	w19,	0	
+	scvtf	s20,	w19	
+	fcmp	s19,	s20
+	b.eq	calculateScore_exitfound
+	b	calculateScore_addscores
+
+calculateScore_increment_bombpowerups:
+	ldr	x19,	[x29, bombpowerupsp_s]
+	ldr	w20,	[x19]
+	add	w20,	w20,	1
+	str	w20,	[x19]
+	b	calculateScore_increment_column	
+
+calculateScore_exitfound:	
+	ldr	x19,	[x29, exitfoundp_s]
+	mov	w20,	1
+	strb	w20,	[x19]
+	b	calculateScore_increment_column	
+
+calculateScore_addscores:
+	ldr	x19,	[x29, totalscorep_s]
+	ldr	s20,	[x19]
+	ldr	s21,	[x29, score_s]
+	fadd	s20,	s20,	s21		// totalScore += score
+	str	s20,	[x19]
+	ldr	s22,	[x29, roundscore_s]	
+	fadd	s22,	s22,	s21		// roundScore += score	
+	str	s22,	[x29, roundscore_s]
 
 calculateScore_increment_column:
 	// increment col
@@ -904,6 +943,24 @@ calculateScore_loop_row_test:
 	ldr	w20,	[x29, endx_s]
 	cmp	w19,	w20
 	b.le	calculateScore_loop_row_body
+
+calculateScore_make_total_zero:
+	ldr	x19,	[x29, totalscorep_s]
+	ldr	s20,	[x19]
+	scvtf	s9,	wzr	
+	fcmp	s20,	s9
+	b.ge	calculateScore_end
+	// Decrement lives
+	ldr	x20,	[x29, livesp_s]	
+	ldr	w21,	[x20]
+	sub	w21,	w21,	1
+	str	w21,	[x20]
+	cmp	w21,	wzr		// if lives <= 0, skip totalscore = 0
+	b.le	calculateScore_end
+	str	s9,	[x19]		// totalscore = 0
+
+calculateScore_end:
+	ldr	s0,	[x29, roundscore_s]
 
 	ldr_x()
 	endfunction(dealloc)
@@ -1027,7 +1084,7 @@ playGame_loop_body:
 	// Reset powerups count
 	str	wzr,	[x29, bombpowerups_s]
 
-	// TODO: roundScore = calculateScore
+	// roundScore = calculateScore
 	ldr	x0,	[x29, fboardp_s]
 	ldr	x1,	[x29, bboardp_s]
 	ldr	w2,	[x29, numRows_s]
@@ -1040,6 +1097,7 @@ playGame_loop_body:
 	add	x10,	x29,	bombpowerups_s
 	add	x11,	x29, 	exitfound_s
 	bl	calculateScore
+	str	s0,	[x29, roundscore_s]	
 
 	// Reset bomb radius
 	mov	w19,	1
@@ -1052,9 +1110,47 @@ playGame_loop_body:
 	ldr	w3,	[x29, numCols_s]
 	bl	displayGame
 
-	// TODO: Calculate bombradius
+playGame_calculate_bombradius:
+	ldr	w19,	[x29, bombpowerups_s]
+	cmp	w19,	wzr			// bombpowerups <= 0, skip to displaying scores
+	b.le	playGame_display_roundscore
+	ldr	w20,	[x29, bombs_s]
+	cmp	w20,	1			// bombs <= 1, skip to displaying scores
+	b.le	playGame_display_roundscore
+	ldr	w20,	[x29, bombradius_s]	
+	lsl	w20,	w20,	w19
+	str	w20,	[x29, bombradius_s]
+
+	// limit max bomb radius
+	// make sure it doesnt go back to single digits
+	mov	w22,	30
+	cmp	w19,	w22
+	b.le	playGame_display_bombradius
+	mov	w20,	2147483647
+	str	w20,	[x29, bombradius_s]
+
+playGame_display_bombradius:		
+	ldr	x0,	=txt_bombradiusinfo
+	mov	w1,	w19
+	mov	w2,	w20
+	bl	printf
 
 	// TODO: Printing of scores and lives
+playGame_display_roundscore:
+	ldr	x0,	=txt_roundscore
+	ldr	s0,	[x29, roundscore_s]
+	fcvt	d0,	s0
+	bl	printf
+playGame_display_totalscore:
+	ldr	x0,	=txt_totalscore
+	ldr	s0,	[x29, totalscore_s]
+	fcvt	d0,	s0
+	bl	printf
+
+playGame_display_lives:
+	ldr	x0,	=txt_lives
+	ldr	w1,	[x29, lives_s]
+	bl	printf
 
 	// Decrement bombs
 	ldr	w19,	[x29, bombs_s]
