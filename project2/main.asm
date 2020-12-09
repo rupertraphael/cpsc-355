@@ -45,8 +45,9 @@ define(
 	txt_roundscore:			.string "Round Score: %.2f\n"
 	txt_totalscore:			.string "Total Score: %.2f\n"
 	txt_gameover:			.string	"\x1B[31mGame Over!\x1B[0m\n"
-	txt_playinfo:			.string "\n%s\t%.2f\t%d\n"
+	txt_playinfo:			.string "%s\t%.2f\t%d\n"
 	txt_lives:			.string "Lives Left: %d\n"
+	leaderboard_file:		.string "leaderboard.txt"
 	tst_args:			.string "name: %s \trows: %d\tcols: %d"
 
 	.balign	4
@@ -967,10 +968,68 @@ calculateScore_end:
 	ldr_x()
 	endfunction(dealloc)
 
+define(
+	fwrite_reg,
+	`
+	mov	w0,	$1	
+	add	x1,	$2,	 $3
+	mov	x2,	$4
+	mov	x8,	64
+	svc 	0
+	'
+)
 
+init_subr_x()
+name_size = 8
+score_size = 4
+time_size = 4
+fd_size = 4
+stringbuf_size = 50
+name_s = dealloc
+score_s = name_s + name_size
+time_s = score_s + score_size
+fd_s = time_s + time_size 
+stringbuf_s = fd_s + fd_size
+alloc = (alloc - name_size - score_size - time_size - fd_size - stringbuf_s) & -16
+dealloc = -alloc
 logScore:
 	startfunction(alloc)
 	str_x()
+
+	str	x0,	[x29, name_s]
+	fcvt	s0,	d0
+	str	s0,	[x29, score_s]
+	str	x1,	[x29, time_s]	
+
+logScore_open_file:
+	mov     w0,     -100
+        ldr     x1,     =leaderboard_file
+        mov     w2,     0101
+	mov	w3,	0700
+        mov     x8,     56
+        svc     0
+	str	w0,	[x29, fd_s]
+
+logScore_append_file:
+	mov     w0,     -100
+        ldr     x1,     =leaderboard_file
+        mov     w2,     02001
+        mov     x8,     56
+        svc     0
+	str	w0,	[x29, fd_s]
+
+	mov	x0,	xzr
+	add	x0,	x29,	stringbuf_s
+	ldr	x1,	=txt_playinfo	
+	ldr	x2,	[x29, name_s]
+	ldr	s0,	[x29, score_s]
+	fcvt	d0,	s0
+	ldr	x3,	[x29, time_s]
+	bl	sprintf
+	mov	w20,	w0
+
+	ldr	w19,	[x29, fd_s]
+	fwrite_reg(w19, x29, stringbuf_s, x20)
 
 	ldr_x()
 	endfunction(dealloc)
@@ -1149,7 +1208,6 @@ playGame_display_bombradius:
 	mov	w2,	w20
 	bl	printf
 
-	// TODO: Printing of scores and lives
 playGame_display_roundscore:
 	ldr	x0,	=txt_roundscore
 	ldr	s0,	[x29, roundscore_s]
@@ -1204,6 +1262,12 @@ playGame_loop_end:
 	fcvt	d0,	s2
 	mov	x2,	x28
 	bl	printf
+
+	ldr	x0,	[x29, name_s]
+	ldr	s2,	[x29, totalscore_s]
+	fcvt	d0,	s2
+	mov	x1,	x28
+	bl	logScore
 
 	ldr_x()
 	endfunction(dealloc)
