@@ -756,9 +756,18 @@ totalscorep_s = bombradius_s + bombradius_size
 livesp_s = totalscorep_s + totalscorep_size
 bombpowerupsp_s = livesp_s + livesp_size
 exitfoundp_s = bombpowerupsp_s + bombpowerupsp_size 
-roundscore_s = exitfoundp_s
+roundscore_s = exitfoundp_s + exitfoundp_size
+score_s = roundscore_s  + roundscore_size
+startx_s = score_s + score_size
+starty_s = startx_s + startx_size
+endx_s = starty_s + starty_size
+endy_s = endx_s + endx_size
+row_s = endy_s + endy_size
+col_s = row_s + row_size
+
 alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - x_size - y_size)
 alloc = (alloc - bombradius_size - totalscorep_size - livesp_size - bombpowerupsp_size - exitfoundp_size)
+alloc = (alloc - roundscore_size - score_size - startx_size - starty_size - endx_size - endy_size - row_size - col_size) & -16
 dealloc = -alloc
 calculateScore:
 	startfunction(alloc)
@@ -776,10 +785,129 @@ calculateScore:
 	str	x10,	[x29, bombpowerupsp_s]
 	str	x11,	[x29, exitfoundp_s]
 
+	// Initialize scores
+	ldr	wzr,	[x29, roundscore_s]
+
+	// Calculate start position (top left)
+	ldr	w19,	[x29, x_s]
+	ldr	w20,	[x29, y_s]
+	ldr	w21,	[x29, bombradius_s]	
+
+	sub	w22,	w19,	w21		// x - bombradius
+	cmp	w22,	wzr
+	b.lt	calculateScore_limit_startx
+calculateScore_store_startx:
+	str	w22,	[x29, startx_s]
+
+	sub	w22,	w20,	w21		// y - bombradius
+	cmp	w22,	wzr
+	b.lt	calculateScore_limit_starty
+calculateScore_store_starty:
+	str	w22,	[x29, starty_s]
+
+	// Calculate end position (bottom right)
+	ldr	w19,	[x29, x_s]
+	ldr	w20,	[x29, y_s]
+	ldr	w21,	[x29, bombradius_s]	
+	add	w22,	w19,	w21		// x + bombradius
+	ldr	w23,	[x29, numRows_s]	
+	sub	w23,	w23,	1		// numRows - 1
+	cmp	w22,	w23
+	b.gt	calculateScore_limit_endx
+calculateScore_store_endx:
+	str	w22,	[x29, endx_s]
+
+	add	w22,	w20,	w21		// y + bombradius
+	ldr	w23,	[x29, numCols_s]	
+	sub	w23,	w23,	1		// numCols - 1
+	cmp	w22,	w23
+	b.gt	calculateScore_limit_endy
+calculateScore_store_endy:
+	str	w22,	[x29, endy_s]
+
+	b	calculateScore_loop
+
+calculateScore_limit_startx:
+	mov	w22,	wzr	
+	b	calculateScore_store_startx
 	
+calculateScore_limit_starty:
+	mov	w22,	wzr	
+	b	calculateScore_store_starty
+	
+calculateScore_limit_endx:
+	ldr	w23,	[x29, numRows_s]	
+	sub	w22,	w23,	1		// numRows - 1
+	b	calculateScore_store_endx
+
+calculateScore_limit_endy:
+	ldr	w23,	[x29, numCols_s]	
+	sub	w22,	w23,	1		// numCols - 1
+	b	calculateScore_store_endy
+
+calculateScore_loop:
+	ldr	w19,	[x29, startx_s]
+	str	w19,	[x29, row_s]		// row = start_x
+
+calculateScore_loop_row:
+	b	calculateScore_loop_row_test
+
+calculateScore_loop_row_body:
+
+	ldr	w19,	[x29, starty_s]
+	str	w19,	[x29, col_s]		// col = start_y	
+
+calculateScore_loop_col:
+	b	calculateScore_loop_col_test
+
+calculateScore_loop_col_body:
+
+	// skip if uncovered already	
+	ldr	x19,	[x29, bboardp_s]
+	ldr	w20,	[x29, row_s]
+	ldr	w21,	[x29, col_s]
+	ldr	w22,	[x29, numCols_s]
+	load_bool_from_array2d(x19, x20, x21, x22, w23)
+	cmp	w23,	wzr
+	b.eq	calculateScore_increment_column	
+
+	// uncover
+	store_bool_to_array2d(x19, x20, x21, x22, wzr)	
+
+	// calculate round score
+	ldr	x19,	[x29, fboardp_s]
+	load_float_from_array2d(x19, x20, x21, x22, s19)
+
+calculateScore_increment_column:
+	// increment col
+	ldr	w19,	[x29, col_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, col_s]	
+
+calculateScore_loop_col_test:
+	ldr	w19,	[x29, col_s]
+	ldr	w20,	[x29, endy_s]
+	cmp	w19,	w20
+	b.le	calculateScore_loop_col_body
+
+	// reset column
+	str	wzr,	[x29, col_s]	
+	
+calculateScore_increment_row:
+	// increment row
+	ldr	w19,	[x29, row_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, row_s]	
+
+calculateScore_loop_row_test:
+	ldr	w19,	[x29, row_s]
+	ldr	w20,	[x29, endx_s]
+	cmp	w19,	w20
+	b.le	calculateScore_loop_row_body
 
 	ldr_x()
 	endfunction(dealloc)
+
 
 
 init_subr_x()
