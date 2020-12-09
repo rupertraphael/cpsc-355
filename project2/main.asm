@@ -24,6 +24,17 @@ define(
 	numpos_info:			.string "Positives: %d / %d - %.2f\n"
 	numnegs_info:			.string "Negatives: %d / %d - %.2f\n"
 	numups_info:			.string "Powerups: %d / %d - %.2f\n"
+	f_board:			.string "%s%-3s\x1B[0m"
+	txt_covered:			.string "X"
+	txt_positive:			.string "+"
+	txt_negative:			.string "-"
+	txt_powerup:			.string "$"
+	txt_exit:			.string "*"
+	color_cyan:			.string "\x1B[36m"
+	color_normal:			.string "\x1B[0m"		
+	color_red:			.string "\x1B[31m"
+	color_green: 			.string "\x1B[32m"
+	color_yellow:			.string "\x1B[33m"
 	tst_args:			.string "name: %s \trows: %d\tcols: %d"
 
 	.balign	4
@@ -101,6 +112,16 @@ main:
 	mov	x2,	x19		// pass rows
 	mov	x3,	x20		// pass cols
 	bl	initializeGame	
+
+	// Display Board
+	mov	x0,	x29		// pass base address of float board 
+	mul	x1,	x19,	x20	// so, we calculate the bytes allocated for float board and
+	lsl	x1,	x1,	2	// sub (go down) that from the frame pointer and we get
+	sub	x1,	x29,	x1	// the address of the bool board
+
+	mov	x2,	x19		// pass rows
+	mov	x3,	x20		// pass cols
+	bl	displayGame
 
 	// Deallocate space for two boards:
 	ldr	w19,	[x29, numRows_s]
@@ -234,7 +255,23 @@ define(
 	'
 )
 
-
+// macro for loading a boolean value into a 2D array
+// load_bool_from_array2d(&array_r, row_r, col_r, numcols_r, value_wr) 
+define(
+	load_bool_from_array2d,
+	`
+	// row_r is gonna be used an offset for loading int value from memory
+	// offset = (row * numcols + col) * 4
+	sub	$2,	xzr,	$2	// negate row
+	mul	$2,	$2,	$4	// row = row * numcols
+	sub	$2,	$2,	$3	// row -= col
+	ldrb	$5,	[$1, $2] 	// load value from array
+	add 	$2,	$2,	$3	// row += col
+	sdiv	$2,	$2,	$4	// row /= numcols
+	sub	$2,	xzr,	$2	// make row positive again
+	// row is now positive and restored
+	'
+)
 
 init_subr_x()
 fboardp_size = 8
@@ -268,8 +305,6 @@ dealloc = -alloc
 initializeGame:
 	startfunction(alloc)
 	str_x()
-
-init:
 
 	str	x0,	[x29, fboardp_s]
 	str	x1,	[x29, bboardp_s]
@@ -550,9 +585,126 @@ init_game_display_info:
 	ldr_x()
 	mov	x1, 	dealloc
 	endfunction(dealloc)
+
+init_subr_x()
+fboardp_size = 8
+bboardp_size = 8
+numRows_size = 4
+numCols_size = 4
+row_size = 4
+col_size = 4
+fboardp_s = dealloc
+bboardp_s = fboardp_s + fboardp_size
+numRows_s = bboardp_s + bboardp_size
+numCols_s = numRows_s + numRows_size
+row_s = numCols_s + numCols_size
+col_s = row_s + row_size
+alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - row_size - col_size) & -16
+dealloc = -alloc
+displayGame:
+	startfunction(alloc)
+	str_x()
+
+	str	x0,	[x29, fboardp_s]
+	str	x1,	[x29, bboardp_s]
+	str	w2,	[x29, numRows_s]
+	str	w3,	[x29, numCols_s]
+
+	str	wzr,	[x29, row_s]
+display_game_display_row:
+	b	display_game_display_row_test
+
+display_game_display_row_body:
+	str	wzr,	[x29, col_s]
+
+display_game_display_col:
+	b	display_game_display_col_test
+display_game_display_col_body:
 	
+	ldr	x19,	[x29, fboardp_s]
+	ldr	w20,	[x29, row_s]
+	ldr	w21,	[x29, col_s]
+	ldr	w22,	[x29, numCols_s]
+	load_float_from_array2d(x19, x20, x21, x22, s19)
+	
+	ldr	x19,	[x29, bboardp_s]
+	load_bool_from_array2d(x19, x20, x21, x22, w23)
 
+	ldr	x0,	=f_board
 
+	cmp	w23,	1
+	b.ne 	display_game_display_uncovered
+
+display_game_display_covered:
+	ldr	x1,	=color_cyan	
+	ldr	x2,	=txt_covered
+	bl	printf
+	b 	display_game_inc_col	
+
+display_game_display_uncovered:
+	mov	w19,	69
+	scvtf	s20,	w19
+	fcmp	s19,	s20	// if value in board equals 69,
+	b.eq	display_game_display_powerup	
+	mov	w19,	0
+	scvtf	s20,	w19
+	fcmp	s19,	s20	// if value in board equals 0,
+	b.eq	display_game_display_exit	
+	b.lt	display_game_display_negative
+	b.gt	display_game_display_positive
+
+display_game_display_exit:	
+	ldr	x1,	=color_normal	
+	ldr	x2,	=txt_exit
+	bl	printf
+	b 	display_game_inc_col	
+
+display_game_display_powerup:	
+	ldr	x1,	=color_yellow	
+	ldr	x2,	=txt_powerup
+	bl	printf
+	b 	display_game_inc_col	
+
+display_game_display_negative:	
+	ldr	x1,	=color_red	
+	ldr	x2,	=txt_negative
+	bl	printf
+	b 	display_game_inc_col	
+
+display_game_display_positive:	
+	ldr	x1,	=color_green	
+	ldr	x2,	=txt_positive
+	bl	printf
+
+display_game_inc_col:
+	//increment column
+	ldr	w19,	[x29, col_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, col_s]
+
+display_game_display_col_test:
+	ldr	w19,	[x29, col_s]
+	ldr	w20,	[x29, numCols_s]
+	cmp	w19,	w20
+	b.lt	display_game_display_col_body
+
+	//increment row
+	ldr	w19,	[x29, row_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, row_s]
+
+	str	wzr,	[x29, col_s]
+
+	ldr	x0,	=br
+	bl	printf
+display_game_display_row_test:
+	ldr	w19,	[x29, row_s]
+	ldr	w20,	[x29, numRows_s]
+	cmp	w19,	w20
+	b.lt	display_game_display_row_body
+
+	ldr_x()
+	endfunction(dealloc)
 
 init_subr_x()
 min_size = 4
