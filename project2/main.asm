@@ -707,6 +707,56 @@ display_game_display_row_test:
 	endfunction(dealloc)
 
 init_subr_x()
+fboardp_size = 8
+bboardp_size = 8
+numRows_size = 4
+numCols_size = 4
+row_size = 4
+col_size = 4
+bombs_size = 4
+x_size = 4
+y_size = 4
+bombradius_size = 4
+bombpowerups_size = 4
+lives_size = 4
+exitfound_size = 1
+totalscore_size = 4
+roundscore_size = 4
+fboardp_s = dealloc
+bboardp_s = fboardp_s + fboardp_size
+numRows_s = bboardp_s + bboardp_size
+numCols_s = numRows_s + numRows_size
+row_s = numCols_s + numCols_size
+col_s = row_s + row_size
+bombs_s = col_s + col_size
+x_s = bombs_s + bombs_size
+y_s = x_s + x_size
+bombradius_s = y_s + y_size
+bombpowerups_s = bombradius_s + bombradius_size
+lives_s = bombpowerups_s + bombpowerups_size
+exitfound_s = lives_s + lives_size
+totalscore_s = exitfound_s + exitfound_size
+roundscore_s = totalscore_s + totalscore_size
+alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - row_size - col_size - bombs_size)
+alloc = (alloc - x_size - y_size - bombradius_size - bombpowerups_size - lives_size - exitfound_size - totalscore_size)
+alloc = (alloc - roundscore_size) & -16
+dealloc = -alloc
+playGame:
+	startfunction(alloc)
+	str_x()
+
+	str	x0,	[x29, fboardp_s]
+	str	x1,	[x29, bboardp_s]
+	str	w2,	[x29, numRows_s]
+	str	w3,	[x29, numCols_s]
+	
+	
+
+	ldr_x()
+	endfunction(dealloc)
+
+
+init_subr_x()
 min_size = 4
 max_size = 4
 negative_size = 4
