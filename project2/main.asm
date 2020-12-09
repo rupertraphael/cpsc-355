@@ -35,6 +35,12 @@ define(
 	color_red:			.string "\x1B[31m"
 	color_green: 			.string "\x1B[32m"
 	color_yellow:			.string "\x1B[33m"
+	txt_bombsleft:			.string "You have %d bombs left\n"
+	txt_stopprompt:			.string "If you want to stop playing input \"-1 -1\".\n"
+	txt_dropbombprompt:		.string "Drop the bomb at (x y): "
+	txt_playinvalidinput:		.string "\x1B[31mSorry, invalid input! Try again.\x1B[0m\n"
+	scanf_bombcoords:		.string "%d %d"
+	txt_bombposition:		.string "Bombing position: %d, %d...\n"
 	tst_args:			.string "name: %s \trows: %d\tcols: %d"
 
 	.balign	4
@@ -122,6 +128,17 @@ main:
 	mov	x2,	x19		// pass rows
 	mov	x3,	x20		// pass cols
 	bl	displayGame
+
+	// Play Game
+	mov	x0,	x29		// pass base address of float board 
+	mul	x1,	x19,	x20	// so, we calculate the bytes allocated for float board and
+	lsl	x1,	x1,	2	// sub (go down) that from the frame pointer and we get
+	sub	x1,	x29,	x1	// the address of the bool board
+
+	mov	x2,	x19		// pass rows
+	mov	x3,	x20		// pass cols
+	ldr	x4,	[x29, name_s]	// pass name
+	bl	playGame
 
 	// Deallocate space for two boards:
 	ldr	w19,	[x29, numRows_s]
@@ -711,6 +728,65 @@ fboardp_size = 8
 bboardp_size = 8
 numRows_size = 4
 numCols_size = 4
+x_size = 4
+y_size = 4
+bombradius_size = 4
+totalscorep_size = 8
+livesp_size = 8
+bombpowerupsp_size = 8
+exitfoundp_size = 8
+
+roundscore_size = 4
+score_size = 4
+startx_size = 4
+starty_size = 4
+endx_size = 4
+endy_size = 4
+row_size = 4
+col_size = 4
+
+fboardp_s = dealloc
+bboardp_s = fboardp_s + fboardp_size
+numRows_s = bboardp_s + bboardp_size
+numCols_s = numRows_s + numRows_size
+x_s = numCols_s + numCols_size
+y_s = x_s + x_size
+bombradius_s = y_s + y_size
+totalscorep_s = bombradius_s + bombradius_size
+livesp_s = totalscorep_s + totalscorep_size
+bombpowerupsp_s = livesp_s + livesp_size
+exitfoundp_s = bombpowerupsp_s + bombpowerupsp_size 
+roundscore_s = exitfoundp_s
+alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - x_size - y_size)
+alloc = (alloc - bombradius_size - totalscorep_size - livesp_size - bombpowerupsp_size - exitfoundp_size)
+dealloc = -alloc
+calculateScore:
+	startfunction(alloc)
+	str_x()
+
+	str	x0,	[x29, fboardp_s]
+	str	x1,	[x29, bboardp_s]
+	str	w2,	[x29, numRows_s]
+	str	w3,	[x29, numCols_s]
+	str	w4,	[x29, x_s]
+	str	w5,	[x29, y_s]
+	str	w6,	[x29, bombradius_s]
+	str	x7,	[x29, totalscorep_s]
+	str	x9,	[x29, livesp_s]
+	str	x10,	[x29, bombpowerupsp_s]
+	str	x11,	[x29, exitfoundp_s]
+
+	
+
+	ldr_x()
+	endfunction(dealloc)
+
+
+init_subr_x()
+fboardp_size = 8
+bboardp_size = 8
+numRows_size = 4
+numCols_size = 4
 row_size = 4
 col_size = 4
 bombs_size = 4
@@ -722,6 +798,7 @@ lives_size = 4
 exitfound_size = 1
 totalscore_size = 4
 roundscore_size = 4
+name_size = 8
 fboardp_s = dealloc
 bboardp_s = fboardp_s + fboardp_size
 numRows_s = bboardp_s + bboardp_size
@@ -737,9 +814,10 @@ lives_s = bombpowerups_s + bombpowerups_size
 exitfound_s = lives_s + lives_size
 totalscore_s = exitfound_s + exitfound_size
 roundscore_s = totalscore_s + totalscore_size
+name_s = roundscore_s + roundscore_size
 alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - row_size - col_size - bombs_size)
 alloc = (alloc - x_size - y_size - bombradius_size - bombpowerups_size - lives_size - exitfound_size - totalscore_size)
-alloc = (alloc - roundscore_size) & -16
+alloc = (alloc - roundscore_size - name_size) & -16
 dealloc = -alloc
 playGame:
 	startfunction(alloc)
@@ -749,69 +827,133 @@ playGame:
 	str	x1,	[x29, bboardp_s]
 	str	w2,	[x29, numRows_s]
 	str	w3,	[x29, numCols_s]
+	str	x4,	[x29, name_s]
+
+	// Calculate bombs = 1 + numrows * numcols * 0.02
+	mov	w19,	1
+	mul	w20,	w2,	w3
+	mov	w21,	50
+	sdiv	w20,	w20,	w21
+	add	w19,	w19,	w20
+	str	w19,	[x29, bombs_s]	
+
+	// Initialize bomb radius
+	mov	w19,	1
+	str	w19,	[x29, bombradius_s]
+	// Initialize bomb powerups
+	str	wzr,	[x29, bombpowerups_s]
+
+	// Set lives
+	mov	w19,	3
+	str	w19,	[x29, lives_s]
+
+	// Initialize exit found
+	strb	wzr,	[x29, exitfound_s]
+
+	// Initialize scores
+	scvtf	s19,	wzr
+	str	s19,	[x29, totalscore_s]
+	str	s19,	[x29, roundscore_s]
+
 	
+playGame_loop:
+	b	playGame_loop_test
+
+playGame_loop_body:
+	// Print bombs left
+	ldr	x0,	=txt_bombsleft
+	ldr	x1,	[x29, bombs_s]
+	bl	printf
+	// Prompt to stop playing
+	ldr	x0,	=txt_stopprompt
+	bl	printf
+	// Prompt to drop the bomb
+	ldr	x0,	=txt_dropbombprompt
+	bl	printf
+
+	// Read user input for x and y
+	ldr	x0,	=scanf_bombcoords
+	add	x1,	x29,	x_s
+	add	x2,	x29,	y_s
+	bl	scanf	
 	
+	cmp	x0,	2
+	b.ne	playGame_invalid_input
+
+	// if x or y is -1, end game loop
+	ldr	w19,	[x29, x_s]
+	mov	w21,	-1
+	cmp	w19,	w21
+	b.eq	playGame_loop_end	
+	ldr	w20,	[x29, y_s]
+	cmp	w20,	w21
+	b.eq	playGame_loop_end	
+
+	ldr	x0,	=txt_bombposition
+	mov	w1,	w19
+	mov	w2,	w20
+	bl	printf	
+
+	// Reset round score to 0
+	str	wzr,	[x29, roundscore_s]
+	// Reset powerups count
+	str	wzr,	[x29, bombpowerups_s]
+
+	// TODO: roundScore = calculateScore
+	ldr	x0,	[x29, fboardp_s]
+	ldr	x1,	[x29, bboardp_s]
+	ldr	w2,	[x29, numRows_s]
+	ldr	w3,	[x29, numCols_s]
+	ldr	w4,	[x29, x_s]
+	ldr	w5,	[x29, y_s]
+	ldr	w6,	[x29, bombradius_s]
+	add	x7,	x29, 	totalscore_s
+	add	x9,	x29, 	lives_s
+	add	x10,	x29,	bombpowerups_s
+	add	x11,	x29, 	exitfound_s
+	bl	calculateScore
+
+	// Reset bomb radius
+	mov	w19,	1
+	str	w19,	[x29, bombradius_s]
+
+	// Display game
+	ldr	x0,	[x29, fboardp_s]
+	ldr	x1,	[x29, bboardp_s]
+	ldr	w2,	[x29, numRows_s]
+	ldr	w3,	[x29, numCols_s]
+	bl	displayGame
+
+	// TODO: Calculate bombradius
+
+	// TODO: Printing of scores and lives
+
+	// Decrement bombs
+	ldr	w19,	[x29, bombs_s]
+	sub	w19,	w19,	1
+	str	w19,	[x29,	bombs_s]
+
+playGame_loop_test:
+	ldr	w19,	[x29, bombs_s]
+	cmp	w19,	wzr
+	b.le	playGame_loop_end
+	ldrb	w19,	[x29, exitfound_s]
+	cmp	w19,	wzr
+	b.ne	playGame_loop_end
+	ldr	w19,	[x29, lives_s]
+	cmp	w19,	wzr		
+	b.le	playGame_loop_end
+	b	playGame_loop_body	
+
+playGame_invalid_input:
+	ldr	x0,	=txt_playinvalidinput
+	bl	printf
+	b	playGame_loop_body
+
+playGame_loop_end:
 
 	ldr_x()
 	endfunction(dealloc)
 
 
-init_subr_x()
-min_size = 4
-max_size = 4
-negative_size = 4
-min_s = dealloc
-max_s = min_s + min_size
-alloc = (alloc - min_size - max_size) & -16
-dealloc = -alloc
-randomNum:
-	startfunction(alloc)
-
-	str_x()
-
-	str	x0,	[x29, min_s]
-	str	x1,	[x29, max_s]
-	mov	x28,	x2
-
-generateNum:
-	bl	rand
-	mov	x19,	x0		// num = rand
-
-	ldr	x20,	[x29, min_s]
-	add	x19,	x19,	x20	// num += min
-
-	ldr	x21,	[x29, max_s]
-	and	x19,	x19,	x21	// num &= max	
-
-	cmp	x19,	x20
-	b.eq	generateNum
-
-	cmp	x19,	x21
-	b.eq	generateNum
-	
-	scvtf	s19,	x19	
-
-makeNumFloat:
-	bl	rand
-	and	x0,	x0,	255
-	scvtf	s21,	x0
-	
-	mov	x22,	255
-	scvtf	s20,	x22
-
-	fdiv	s21,	s21,	s20
-	fadd	s19,	s19,	s21		
-
-makeNegative:
-	cmp	x28,	1
-	b.ne	end_randNum
-	mov	x19,	xzr
-	scvtf	s20,	x19		// Make 0 float
-	fsub	s19,	s20,	s19	// Make random float negative
-	
-end_randNum:
-	fmov	s0,	s19
-
-	ldr_x()
-	endfunction(dealloc)
 
