@@ -44,6 +44,8 @@ define(
 	txt_bombposition:		.string "Bombing position: %d, %d...\n"
 	txt_roundscore:			.string "Round Score: %.2f\n"
 	txt_totalscore:			.string "Total Score: %.2f\n"
+	txt_gameover:			.string	"\x1B[31mGame Over!\x1B[0m\n"
+	txt_playinfo:			.string "\n%s\t%.2f\t%d\n"
 	txt_lives:			.string "Lives Left: %d\n"
 	tst_args:			.string "name: %s \trows: %d\tcols: %d"
 
@@ -966,6 +968,13 @@ calculateScore_end:
 	endfunction(dealloc)
 
 
+logScore:
+	startfunction(alloc)
+	str_x()
+
+	ldr_x()
+	endfunction(dealloc)
+
 
 init_subr_x()
 fboardp_size = 8
@@ -1039,6 +1048,11 @@ playGame:
 	scvtf	s19,	wzr
 	str	s19,	[x29, totalscore_s]
 	str	s19,	[x29, roundscore_s]
+
+	// start time
+	mov	x0,	xzr
+	bl	time
+	mov	x28,	x0
 
 	
 playGame_loop:
@@ -1175,6 +1189,21 @@ playGame_invalid_input:
 	b	playGame_loop_body
 
 playGame_loop_end:
+
+	// end time
+	mov	x0,	xzr
+	bl	time
+	sub	x28,	x0,	x28
+
+	ldr	x0,	=txt_gameover
+	bl	printf
+
+	ldr	x0,	=txt_playinfo
+	ldr	x1,	[x29, name_s]
+	ldr	s2,	[x29, totalscore_s]
+	fcvt	d0,	s2
+	mov	x2,	x28
+	bl	printf
 
 	ldr_x()
 	endfunction(dealloc)
