@@ -77,14 +77,22 @@ define(
 init_subr_x()
 min_size = 4
 max_size = 4
-num_size = 4
-negative_size = 2
+negative_size = 4
 min_s = dealloc
 max_s = min_s + min_size
-num_s = max_s + max_size
-negative_s = num_s + num_size
-alloc = (alloc - min_size - max_size - num_size + negative_size) & -16
+alloc = (alloc - min_size - max_size) & -16
 dealloc = -alloc
+
+/**
+ * Generates a random float number between min and 
+ * max inclusive. 
+ * This implementation works unexpectedly if min is negative or
+ * max != (2^n) - 1.
+ * @param  min      min value expected to be generated
+ * @param  max      max value expected to be generated
+ * @param  negative specifies if generated number is negative
+ * @return          |float| between |min| and |max|
+ */
 
 randomNum:
 	startfunction(alloc)
@@ -93,7 +101,7 @@ randomNum:
 
 	str	x0,	[x29, min_s]
 	str	x1,	[x29, max_s]
-	str	x2,	[x29, negative_s]
+	mov	x28,	x2
 
 generateNum:
 	bl	rand
@@ -104,32 +112,36 @@ generateNum:
 
 	ldr	x21,	[x29, max_s]
 	and	x19,	x19,	x21	// num &= max	
+
+	cmp	x19,	x20
+	b.eq	generateNum
+
+	cmp	x19,	x21
+	b.eq	generateNum
 	
-	scvtf	d19,	x19	
+	scvtf	s19,	x19	
 
 makeNumFloat:
 	bl	rand
 	and	x0,	x0,	255
-	scvtf	d21,	x0
+	scvtf	s21,	x0
 	
 	mov	x22,	255
-	scvtf	d20,	x22
+	scvtf	s20,	x22
 
-	fdiv	d21,	d21,	d20
-	fadd	d19,	d19,	d21		
+	fdiv	s21,	s21,	s20
+	fadd	s19,	s19,	s21		
 
 makeNegative:
-	ldr	x20,	[x29,	negative_s]
-	cmp	x20,	1
+	cmp	x28,	1
 	b.ne	end_randNum
 	mov	x19,	xzr
-	scvtf	d20,	x19		// Make 0 float
-	fsub	d19,	d20,	d19	// Make random float negative
+	scvtf	s20,	x19		// Make 0 float
+	fsub	s19,	s20,	s19	// Make random float negative
 	
 end_randNum:
-	fmov	d0,	d19
+	fmov	s0,	s19
 
 	ldr_x()
 	endfunction(dealloc)
-
 

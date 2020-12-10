@@ -15,6 +15,8 @@ define(
 )
 
 	.text
+	f_topscoreinfo:			.string "%3d. %s\t%.2f\t%d\n"
+	param_R:			.string "r"
 	txt_invalidargs:		.string "Invalid arguments."
 	f_9d:				.string	"%9d"
 	f_f2:				.string "%.2f"
@@ -41,14 +43,21 @@ define(
 	txt_playinvalidinput:		.string "\x1B[31mSorry, invalid input! Try again.\x1B[0m\n"
 	txt_bombradiusinfo:		.string "\x1B[33mBang to the power of %d! Your next bomb's radius is now %d \x1B[0m\n"
 	scanf_bombcoords:		.string "%d %d"
+	scanf_playinfo:			.string "%s %f %d"
 	txt_bombposition:		.string "Bombing position: %d, %d...\n"
 	txt_roundscore:			.string "Round Score: %.2f\n"
 	txt_totalscore:			.string "Total Score: %.2f\n"
 	txt_gameover:			.string	"\x1B[31mGame Over!\x1B[0m\n"
 	txt_playinfo:			.string "%s\t%.2f\t%d\n"
 	txt_lives:			.string "Lives Left: %d\n"
+	txt_askscores:			.string "How many top scores would you like to see? "
+	scanf_d:			.string "%d"
+	txt_noscores:			.string "Leaderboard file missing."
 	leaderboard_file:		.string "leaderboard.txt"
 	tst_args:			.string "name: %s \trows: %d\tcols: %d"
+	test_s:				.string "%s\n"
+	test_d:				.string "%d\n"
+	test_f:				.string "%f\n"
 
 	.balign	4
 	.global	main
@@ -56,13 +65,16 @@ define(
 numRows_size = 4
 numCols_size = 4
 name_size = 8
+n_s = 4
  
 numRows_s = 16
 numCols_s = numRows_s + numRows_size
 name_s = numCols_s + numCols_size
+n_s = name_s + name_size
 
-alloc = -(numRows_size + numCols_size + name_size + 16) & -16
+alloc = -(numRows_size + numCols_size + name_size + name_size) & -16
 dealloc = -alloc
+
 
 main:
 	startfunction(alloc)
@@ -92,6 +104,14 @@ main:
 	cmp	x0,	xzr			// if sscanf return is 0,
 	b.eq	invalidargs			// end
 
+	// Set minimum number of rows and columns
+	ldr	w19,	[x29, numRows_s]
+	cmp	w19,	10
+	b.lt	invalidargs
+	ldr	w19,	[x29, numCols_s]
+	cmp	w19,	10
+	b.lt	invalidargs
+
 	// Seed rand
 	mov	x0,	xzr
 	bl	time
@@ -100,20 +120,21 @@ main:
 	// Allocate space for two boards: 
 	// 1. Board containing floats: (rows * cols * 4) bytes
 	// 2. Board(bool board) defining which cells are covered/uncovered: (rows * cols * 2) bytes
-	// (rows * cols * 4) + (rows * cols * 2) = (rows * cols * 6)
+	// (rows * cols * 4) + (rows * cols * 1) = (rows * cols * 5)
 	// So first, we load the needed values
 	ldr	w19,	[x29,	numRows_s]
 	ldr	w20,	[x29,	numCols_s]
 
-	mov 	x21,	-5		// remember 6
-	mul	x21,	x21,	x19	// 6 * rows
-	mul	x21,	x21,	x20	// 6rows * cols	
+	mov 	x21,	-5		// remember 5
+	mul	x21,	x21,	x19	// 5 * rows
+	mul	x21,	x21,	x20	// 5rows * cols	
 	mov	x22,	-16
 	and	x21,	x21,	x22	// pad bytes if necessary
 	// x21 now contains the number of bytes to be allocated for both arrays
 
 	add	sp,	sp,	x21	// allocate space for two boards
 
+startGame:
 	// Here we supply args for initializeGame and call it	
 	mov	x0,	x29		// pass base address of float board 
 
@@ -146,6 +167,20 @@ main:
 	mov	x3,	x20		// pass cols
 	ldr	x4,	[x29, name_s]	// pass name
 	bl	playGame
+
+	// Ask for number of top scores to display:
+	ldr	x0,	=txt_askscores
+	bl	printf
+	ldr	x0,	=scanf_d
+	mov	x1,	xzr
+	add	x1,	x29,	n_s
+	bl	scanf	
+
+	// Display top scores
+	ldr	w0,	[x29, n_s]
+	bl	displayTopScores
+
+	//b	startGame	
 
 	// Deallocate space for two boards:
 	ldr	w19,	[x29, numRows_s]
@@ -325,6 +360,15 @@ number_s = dice_s + dice_size
 alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - number_size)
 alloc = (alloc - row_size - col_size - maxups_size - maxnegs_size - numups_size - numnegs_size - dice_size) & -16
 dealloc = -alloc
+
+/**
+ * Populate the main board with numbers and
+ * cover the bool game board
+ * @param board           the board that should contain numbers
+ * @param covered         the board that determines of a cell is covered or not
+ * @param numberOfRows    the boards' number of rows
+ * @param numberOfColumns the boards' number of columns
+ */
 
 initializeGame:
 	startfunction(alloc)
@@ -625,6 +669,19 @@ row_s = numCols_s + numCols_size
 col_s = row_s + row_size
 alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - row_size - col_size) & -16
 dealloc = -alloc
+
+/**
+ * Display the board.
+ * X - covered/not bombed yet
+ * $ - bomb powerup (radius doubler)
+ * - - negative score
+ * + - positive score
+ * @param board           main board with numbers
+ * @param covered         board that determines which cells are covered
+ * @param numberOfRows    boards' number of rows
+ * @param numberOfColumns boards' number of columns
+ */
+
 displayGame:
 	startfunction(alloc)
 	str_x()
@@ -776,6 +833,25 @@ alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - x_s
 alloc = (alloc - bombradius_size - totalscorep_size - livesp_size - bombpowerupsp_size - exitfoundp_size)
 alloc = (alloc - roundscore_size - score_size - startx_size - starty_size - endx_size - endy_size - row_size - col_size) & -16
 dealloc = -alloc
+
+/**
+ * Calculates the player's score,
+ * lives, bomb powerups count, and determines
+ * if exit is found.
+ * @param 	board             main board with values
+ * @param 	covered           board that determines which cells are covered
+ * @param 	numberOfRows      the boards' number of rows
+ * @param 	numberOfColumns   boards' number of columns
+ * @param 	x                 x coordinate to bomb
+ * @param 	y                 y coordinate to bomb
+ * @param 	bombRadius        determines how large the bomb area is going to be
+ * @param 	totalScore        player's score; becomes 0 when it becomes negative and lives > 0
+ * @param 	lives             player's number of lives
+ * @param 	bombPowerupsCount player's number of bomb powerups for the round
+ * @param 	exitFound         determines whether the exit has been found
+ * @return 	roundScore		  player's score for the round (not reset)		
+ */
+
 calculateScore:
 	startfunction(alloc)
 	str_x()
@@ -992,6 +1068,17 @@ fd_s = time_s + time_size
 stringbuf_s = fd_s + fd_size
 alloc = (alloc - name_size - score_size - time_size - fd_size - stringbuf_s) & -16
 dealloc = -alloc
+
+/**
+ * Logs the given name, score, and time 
+ * in a file.
+ * @param name            player's name
+ * @param score           player's score
+ * @param time            time in seconds between starting the game and exit
+ * @param numberOfRows    board's number of rows
+ * @param numberOfColumns board's number of columns
+ */
+
 logScore:
 	startfunction(alloc)
 	str_x()
@@ -1034,6 +1121,311 @@ logScore_append_file:
 	ldr_x()
 	endfunction(dealloc)
 
+init_subr_x()
+n_size = 4
+filep_size = 8
+string_size = 30
+name_size = 20
+score_size = 4
+time_size = 4
+count_size = 4
+scoresp_size = 8
+timesp_size = 8
+namesp_size = 8
+row_size = 4
+swapped_size = 1
+temprow_size = 4
+n_s = dealloc
+filep_s = n_s + n_size
+string_s = filep_s + filep_size
+name_s = string_s + string_size
+score_s = name_s + name_size
+time_s = score_s + score_size
+count_s = time_s + time_size
+scoresp_s = count_s + count_size
+timesp_s = scoresp_s + scoresp_size
+namesp_s = timesp_s + timesp_size 
+row_s = namesp_s + namesp_size
+swapped_s = row_s + row_size
+temprow_s = swapped_s + swapped_size
+alloc = (alloc - n_size - filep_size - string_size - name_size - score_size - time_size - count_size)
+alloc = (alloc - scoresp_size - timesp_size - namesp_size - row_size - swapped_size - temprow_size) & -16
+dealloc = -alloc
+
+/**
+ * Display n top scores which is saved
+ * in a log file in the same directory.
+ * @param n number of top scores to display
+ */
+
+displayTopScores:
+	startfunction(alloc)
+	str_x()
+
+	str	w0,	[x29, n_s]
+	// open file
+	ldr	x0, 	=leaderboard_file	
+	ldr	x1,	=param_R
+	bl	fopen
+	str	x0,	[x29, filep_s]		// Store file pointer
+
+	cmp	x0,	xzr
+	b.eq 	displayTopScores_doesnt_exist
+		
+	str	wzr,	[x29, count_s]		// count = 0
+
+	// scoresp, timesp, namesp are pointers to bases of arrays 
+	// namesp shall be a pointer to an array of pointers which point
+	// to bases of strings
+	// allocate bytes for scores (allocates at the heap)
+	mov	x0,	4
+	bl	malloc
+	str	x0,	[x29, scoresp_s]
+	// allocate bytes for times (allocates at the heap)
+	mov	x0,	4
+	bl	malloc
+	str	x0,	[x29, timesp_s]
+	// allocate bytes for names (allocates at the heap)
+	mov	x0,	1
+	bl	malloc
+	str	x0,	[x29, namesp_s]
+
+displayTopScores_scan_file:
+	b	displayTopScores_scan_file_test
+displayTopScores_scan_file_body:
+	ldr	x0,	[x29, filep_s]
+	ldr	x1,	=scanf_playinfo
+	mov	x2,	xzr
+	add	x2,	x29,	name_s
+	mov	x3,	xzr
+	add	x3,	x29, 	score_s
+	mov	x4,	xzr
+	add	x4,	x29, 	time_s	
+	bl	fscanf	
+
+	// reallocate bytes for names
+	ldr	x0,	[x29, namesp_s]	
+	mov	w19,	20	
+	ldr	w20,	[x29, count_s]
+	add	w20,	w20,	1
+	mul	w1,	w20,	w19 		// count * 20
+	bl	realloc
+	str	x0,	[x29, namesp_s]
+	// copy scanned name into name array
+	ldr	x0,	[x29, namesp_s]
+	ldr	w20,	[x29, count_s]
+	mul	w20,	w20,	w19 		// count * 20
+	add	x0,	x0,	x20
+	mov	x1,	xzr
+	add	x1,	x29,	name_s	
+	bl	strcpy
+
+	// reallocate bytes for scores
+	ldr	x0,	[x29, scoresp_s]	
+	ldr	w20,	[x29, count_s]
+	add	w20,	w20,	1
+	lsl	w1,	w20,	2 		// count * 4
+	bl	realloc
+	// score[count] = score
+	str	x0,	[x29, scoresp_s]
+	ldr	w20,	[x29, count_s]
+	lsl	w20,	w20,	2 		// count * 4
+	ldr	s21,	[x29, score_s]
+	str	s21,	[x0, x20]
+
+	// reallocate bytes for times
+	ldr	x0,	[x29, timesp_s]	
+	ldr	w20,	[x29, count_s]
+	add	w20,	w20,	1
+	lsl	w1,	w20,	2 		// count * 4
+	bl	realloc
+	// times[count] = time
+	str	x0,	[x29, timesp_s]
+	ldr	w20,	[x29, count_s]
+	lsl	w20,	w20,	2 		// count * 4
+	ldr	w21,	[x29, time_s]
+	str	w21,	[x0, x20]
+
+	// skip to eol
+	add	x0,	x29,	string_s
+	mov	x1,	string_size
+	ldr	x2,	[x29, filep_s]
+	bl	fgets	
+
+	// increment count
+	ldr	w19,	[x29, count_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, count_s]	
+		
+displayTopScores_scan_file_test:
+	ldr	x0,	[x29, filep_s]
+	bl	feof
+	cmp	x0,	xzr
+	b.eq	displayTopScores_scan_file_body	
+
+	// Subtract 1 from count
+	ldr	w19,	[x29, count_s]
+	sub	w19,	w19,	1
+	str	w19,	[x29, count_s]
+	
+	mov	w19,	wzr
+	str	w19,	[x29, row_s]
+	// declare sortedRows
+	// allocate bytes
+	ldr	w19,	[x29, count_s]
+	sub	x19,	xzr,	x19	
+	lsl	x19,	x19,	2		// multiply by 4
+	and	x19,	x19,	-16
+	add	sp,	sp,	x19
+
+displayTopScores_init_sort:
+	b	displayTopScores_init_sort_test
+displayTopScores_init_sort_body:
+
+	ldr	w19,	[x29, row_s]
+	lsl	x20,	x19,	2
+	sub	x20,	xzr,	x20
+	str	w19,	[x29, x20]
+	
+	// increment row
+	ldr	w19,	[x29, row_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, row_s]
+displayTopScores_init_sort_test:
+	ldr	w19,	[x29, row_s]
+	ldr	w20,	[x29, count_s]
+	cmp	w19,	w20
+	b.lt	displayTopScores_init_sort_body	
+	
+	// Sort the unsorted array of indices using bubble sort by 
+	// comparing the corresponding scores.
+	// This loop ends after the iteration where it has gone through all of 
+	// the sorted rows and hasn't swapped any of them anymore. 	
+displayTopScores_sort:
+	strb	wzr,	[x29, swapped_s]	
+
+	str	wzr,	[x29, row_s]
+displayTopScores_sort_inner:
+	b	displayTopScores_sort_inner_test
+
+displayTopScores_sort_inner_body:
+	
+	// get sorted rows offset
+	ldr	w19,	[x29, row_s]
+	sub	x19,	xzr,	x19		// negate row
+	lsl	x19,	x19,	2		// * 4
+	ldr	w20,	[x29, x19]		// w20 is the index		
+	lsl	x25,	x20,	2		// make the index an offset
+	ldr	x21,	[x29, scoresp_s]	// get base address of scores
+	ldr	s22,	[x21, x25]		// load scores[sortedRows[row]]
+	sub	x19,	x19,	4		
+	ldr	w23,	[x29, x19]		// w23 is the index		
+	lsl	x26,	x23,	2		// make the index an offset
+	ldr	s24,	[x21, x26]		// load scores[sortedRows[row + 1]]
+
+	fcmp	s22,	s24			
+	b.ge	displayTopScores_sort_inner_body_increment_row
+	
+	str	x20,	[x29, temprow_s]	// store in temprow	
+	add	x19,	x19,	4		
+	str	w23,	[x29, x19]		// sortedRows[row] = sortedRows[row + 1]	
+	ldr	x27,	[x29, temprow_s]
+	sub	x19,	x19,	4		
+	str	w27,	[x29,	x19]
+
+	mov	w28,	1
+	strb	w28,	[x29, swapped_s]
+
+displayTopScores_sort_inner_body_increment_row:
+	// increment row
+	ldr	w19,	[x29, row_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, row_s]
+
+displayTopScores_sort_inner_test:
+	ldr	w19,	[x29, row_s]
+	ldr	w20,	[x29, count_s]
+	sub	w20,	w20,	1
+	cmp	w19,	w20
+	b.lt	displayTopScores_sort_inner_body	
+	
+displayTopScores_sort_test:
+	ldrb	w19,	[x29, swapped_s]
+	cmp	w19,	wzr
+	b.ne	displayTopScores_sort
+
+	str	wzr,	[x29, row_s]
+
+	ldr	w19,	[x29, n_s]
+	ldr	w20,	[x29, count_s]
+	cmp	w19,	w20
+	b.le	displayTopScores_display
+	str	w20,	[x29, n_s]
+
+displayTopScores_display:	
+	b	displayTopScores_display_test
+displayTopScores_display_body:
+	ldr	x0,	=f_topscoreinfo
+	ldr	w1,	[x29, row_s]
+	add	w1,	w1, 	1	// row + 1
+	
+	sub	x21,	x1,	1
+	// get sortedRows' offset
+	sub	x20,	xzr,	x21	// negate row
+	lsl	x20,	x20,	2	// multiply by 4
+	// load top scores index
+	ldr	w21,	[x29, x20]
+	// load name, x22 has name offset
+	mov	x23,	20
+	mul	x22,	x21,	x23
+	// load name base
+	ldr	x24,	[x29, namesp_s]
+	mov	x2,	xzr
+	add	x2,	x24, 	x22
+	// calculate scores/times offset
+	lsl	x22,	x21,	2
+	// load score
+	ldr	x24,	[x29, scoresp_s]
+	ldr	s3,	[x24, x22]		
+	fcvt	d0,	s3
+	// load time
+	ldr	x24,	[x29, timesp_s]
+	ldr	w3,	[x24, x22]
+	bl	printf	
+
+	// increment row
+	ldr	w19,	[x29, row_s]
+	add	w19,	w19,	1
+	str	w19,	[x29, row_s]
+
+displayTopScores_display_test:
+	ldr	w19,	[x29, row_s]
+	ldr	w20, 	[x29, n_s]
+	cmp	w19,	w20
+	b.lt	displayTopScores_display_body	
+
+	// deallocate bytes
+	ldr	w19,	[x29, count_s]
+	sub	x19,	xzr,	x19	
+	lsl	x19,	x19,	2		// multiply by 4
+	and	x19,	x19,	-16
+	sub	sp,	sp,	x19
+	b 	displayTopScores_return
+
+	ldr	x0,	[x29, namesp_s]
+	bl	free	
+	ldr	x0,	[x29, scoresp_s]
+	bl	free	
+	ldr	x0,	[x29, timesp_s]
+	bl	free	
+
+displayTopScores_doesnt_exist:
+	ldr	x0,	=txt_noscores
+	bl	printf
+
+displayTopScores_return:
+	ldr_x()
+	endfunction(dealloc)	
 
 init_subr_x()
 fboardp_size = 8
@@ -1072,6 +1464,19 @@ alloc = (alloc - fboardp_size - bboardp_size - numRows_size - numCols_size - row
 alloc = (alloc - x_size - y_size - bombradius_size - bombpowerups_size - lives_size - exitfound_size - totalscore_size)
 alloc = (alloc - roundscore_size - name_size) & -16
 dealloc = -alloc
+
+/**
+ * Prompt for bomb coordinates,
+ * uncover board, calculate scores
+ * and bomb radius, and,
+ * determine whether game is still on.
+ * @param board           main board with numbers
+ * @param covered         board which determines which cells are covered
+ * @param name            player's name
+ * @param numberOfRows    boards' number of rows
+ * @param numberOfColumns boards' number of columns
+ */
+
 playGame:
 	startfunction(alloc)
 	str_x()
@@ -1271,6 +1676,3 @@ playGame_loop_end:
 
 	ldr_x()
 	endfunction(dealloc)
-
-
-
